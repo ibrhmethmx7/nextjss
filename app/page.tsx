@@ -1,65 +1,123 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Film, Heart, Lock, User } from "lucide-react";
+
+const users = [
+  { id: "ben", name: "Ben", color: "from-blue-500 to-blue-700" },
+  { id: "sen", name: "Sen", color: "from-pink-500 to-pink-700" },
+];
+
+export default function LoginPage() {
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const user = users.find((u) => u.id === selectedUser);
+
+    if (user && password === "1234") {
+      localStorage.setItem("cinema_user", user.id);
+      localStorage.setItem("cinema_user_name", user.name);
+      window.location.href = "/dashboard";
+    } else {
+      setError("Şifre yanlış");
+    }
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("cinema_user")) {
+      window.location.href = "/dashboard";
+    }
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] via-[#1a0a1a] to-[#0a0a0a] text-white p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-sm space-y-8"
+      >
+        {/* Logo */}
+        <div className="text-center space-y-4">
+          <motion.div
+            className="relative inline-block"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Film className="w-20 h-20 text-red-500 mx-auto" />
+            <Heart className="w-8 h-8 text-pink-500 fill-current absolute -top-1 -right-1 animate-pulse" />
+          </motion.div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
+            Bizim Sinemamız
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+          <p className="text-gray-400">Sadece biz için</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {/* User Selection */}
+        {!selectedUser ? (
+          <div className="space-y-4">
+            <p className="text-center text-gray-400 text-sm">Kim giriş yapıyor?</p>
+            <div className="grid grid-cols-2 gap-4">
+              {users.map((user) => (
+                <motion.button
+                  key={user.id}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedUser(user.id)}
+                  className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/30 transition-all text-center"
+                >
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${user.color} mx-auto mb-3 flex items-center justify-center`}>
+                    <User className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="font-medium">{user.name}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="text-center mb-4">
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${users.find(u => u.id === selectedUser)?.color} mx-auto mb-2 flex items-center justify-center`}>
+                <User className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-sm text-gray-400">Merhaba {users.find(u => u.id === selectedUser)?.name}!</p>
+            </div>
+
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <Input
+                type="password"
+                placeholder="Şifre"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white text-center text-lg h-12"
+                autoFocus
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-400 text-sm text-center">{error}</p>
+            )}
+
+            <Button type="submit" className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-lg h-12">
+              Giriş Yap
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedUser(null)}
+              className="w-full text-sm text-gray-500 hover:text-white transition-colors"
+            >
+              Geri dön
+            </button>
+          </form>
+        )}
+      </motion.div>
     </div>
   );
 }
