@@ -152,18 +152,21 @@ function WatchContent() {
 
     // Video Sync Logic
     useEffect(() => {
-        if (!roomId || !playerRef.current) return;
+        if (!roomId) return;
 
         const playerStateRef = ref(database, `rooms/${roomId}/playerState`);
 
         const unsubPlayer = onValue(playerStateRef, (snapshot) => {
             const data = snapshot.val();
-            if (!data) return;
+            if (!data || !playerRef.current) return;
 
             // Ignore my own updates
             if (data.sessionId === sessionId) return;
 
             const player = playerRef.current;
+            // Check if player is ready (has methods)
+            if (!player.getPlayerState || !player.seekTo) return;
+
             const playerStatus = player.getPlayerState();
             const currentTime = player.getCurrentTime();
 
