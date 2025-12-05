@@ -61,12 +61,12 @@ function WatchContent() {
     const [currentUser, setCurrentUser] = useState("");
     const [userId, setUserId] = useState("");
     const [isCreator, setIsCreator] = useState(false);
+    const [sessionId] = useState(Math.random().toString(36).substring(2));
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const chatEndRef = useRef<HTMLDivElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<any>(null);
-    const playerContainerRef = useRef<HTMLDivElement>(null);
-    const isSeekingRef = useRef(false);
+    const isRemoteUpdate = useRef(false);
 
     // Initialize User and Room
     useEffect(() => {
@@ -159,16 +159,17 @@ function WatchContent() {
             const data = snapshot.val();
             if (!data) return;
 
-            // If I am creator, I don't listen to updates (I send them)
-            // UNLESS I want to support multiple controls? No, let's stick to creator-only control for now.
-            if (isCreator) return;
+            // Ignore my own updates
+            if (data.sessionId === sessionId) return;
 
             const player = playerRef.current;
             const playerStatus = player.getPlayerState();
             const currentTime = player.getCurrentTime();
 
+            isRemoteUpdate.current = true;
+
             // Sync Play/Pause
-            if (data.isPlaying && playerStatus !== 1 && playerStatus !== 3) { // 1=playing, 3=buffering
+            if (data.isPlaying && playerStatus !== 1 && playerStatus !== 3) {
                 player.playVideo();
             } else if (!data.isPlaying && playerStatus === 1) {
                 player.pauseVideo();
@@ -178,31 +179,42 @@ function WatchContent() {
             if (Math.abs(currentTime - data.currentTime) > 2) {
                 player.seekTo(data.currentTime, true);
             }
+
+            // Reset flag after a short delay to allow events to fire
+            setTimeout(() => { isRemoteUpdate.current = false; }, 500);
         });
 
         return () => unsubPlayer();
-    }, [roomId, isCreator]);
+    }, [roomId, sessionId]);
 
-    // Creator: Send updates
+    // Creator: Send updates (Periodic)
     useEffect(() => {
         if (!isCreator || !roomId || !playerRef.current) return;
 
         const interval = setInterval(() => {
             const player = playerRef.current;
-            if (player && player.getPlayerState) {
+            if (player && player.getPlayerState && !isRemoteUpdate.current) {
                 const currentTime = player.getCurrentTime();
                 const isPlaying = player.getPlayerState() === 1;
+
+                // Only update if playing to avoid spamming paused state? 
+                // Actually periodic update is good for time sync.
+                // But we should be careful not to override remote seeks if we are lagging.
+                // Let's keep it simple: Creator is authority.
+                // But now we allow multi-tab creator.
+                // We should only write if we are NOT processing a remote update.
 
                 update(ref(database, `rooms/${roomId}/playerState`), {
                     currentTime,
                     isPlaying,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    sessionId // Tag with my session
                 });
             }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isCreator, roomId]);
+    }, [isCreator, roomId, sessionId]);
 
     // Initialize YouTube Player
     const currentVideo = queue[currentIndex];
@@ -258,7 +270,7 @@ function WatchContent() {
     };
 
     const onPlayerStateChange = (event: any) => {
-        if (!isCreator) return;
+        if (!isCreator || isRemoteUpdate.current) return;
 
         const player = event.target;
         const isPlaying = event.data === 1;
@@ -267,14 +279,19 @@ function WatchContent() {
         update(ref(database, `rooms/${roomId}/playerState`), {
             isPlaying,
             currentTime,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            sessionId
         });
     };
 
     // Auto-scroll chat
     useEffect(() => {
-        if (chatMessages.length > 0) {
-            chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        if (chatMessages.length > 0 && chatContainerRef.current) {
+            setTimeout(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, 100);
         }
     }, [chatMessages, activePanel]);
 
@@ -553,7 +570,7 @@ function WatchContent() {
 
                     {activePanel === "chat" ? (
                         <div className="flex-1 flex flex-col min-h-0">
-                            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2 scroll-smooth">
                                 {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-8">Henüz mesaj yok</p>}
                                 {chatMessages.map((msg, i) => (
                                     <div key={i} className="bg-white/5 rounded-lg p-2">
@@ -561,7 +578,6 @@ function WatchContent() {
                                         <p className="text-sm">{msg.text}</p>
                                     </div>
                                 ))}
-                                <div ref={chatEndRef} />
                             </div>
                             <div className="p-3 flex gap-2 border-t border-white/5 shrink-0">
                                 <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
