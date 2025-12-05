@@ -155,8 +155,16 @@ function WatchContent() {
 
     // Auto-scroll chat
     useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }, [chatMessages]);
+        if (chatMessages.length > 0) {
+            chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+    }, [chatMessages, activePanel]);
+
+    const copyRoomLink = () => {
+        const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+        navigator.clipboard.writeText(url);
+        alert("Oda linki kopyalandı! Arkadaşlarına gönder.");
+    };
 
     // Fullscreen Listener
     useEffect(() => {
@@ -289,15 +297,21 @@ function WatchContent() {
     }
 
     return (
-        <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'min-h-screen bg-[#0a0a0a]'} text-white flex flex-col lg:flex-row transition-all duration-300`}>
+        <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'h-screen bg-[#0a0a0a] overflow-hidden'} text-white flex flex-col lg:flex-row transition-all duration-300`}>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col min-w-0 ${isFullscreen ? 'h-full' : ''}`}>
+            <div className={`flex-1 flex flex-col min-w-0 ${isFullscreen ? 'h-full' : 'h-full'}`}>
 
                 {/* Header - Hidden in Fullscreen */}
                 {!isFullscreen && (
-                    <div className="flex items-center justify-between p-2 border-b border-white/5 bg-black/80">
-                        <Link href="/dashboard"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /></Button></Link>
+                    <div className="flex items-center justify-between p-2 border-b border-white/5 bg-black/80 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <Link href="/dashboard"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /></Button></Link>
+                            <Button variant="outline" size="sm" onClick={copyRoomLink} className="text-xs border-white/10 bg-white/5 hover:bg-white/10">
+                                <span className="mr-2">Oda: {roomId}</span>
+                                🔗 Linki Kopyala
+                            </Button>
+                        </div>
                         <span className="text-sm truncate flex-1 text-center px-2">{currentVideo?.title}</span>
                         <div className="flex gap-1 lg:hidden">
                             <Button variant="ghost" size="sm" onClick={() => setActivePanel("chat")} className={activePanel === "chat" ? "bg-white/10" : ""}><MessageCircle className="h-4 w-4" /></Button>
@@ -307,7 +321,7 @@ function WatchContent() {
                 )}
 
                 {/* Video Container */}
-                <div className={`relative w-full ${isFullscreen ? 'flex-1 h-full' : ''}`} style={!isFullscreen ? { paddingTop: "56.25%" } : {}}>
+                <div className={`relative w-full shrink-0 ${isFullscreen ? 'flex-1 h-full' : ''}`} style={!isFullscreen ? { paddingTop: "56.25%" } : {}}>
                     <iframe
                         src={getEmbedUrl(currentVideo.url)}
                         className="absolute inset-0 w-full h-full"
@@ -418,8 +432,8 @@ function WatchContent() {
 
             {/* Desktop Side Panel (Twitch style) - Hidden in Fullscreen */}
             {!isFullscreen && (
-                <div className="hidden lg:flex flex-col w-80 border-l border-white/5 bg-black/30">
-                    <div className="flex border-b border-white/5">
+                <div className="hidden lg:flex flex-col w-80 border-l border-white/5 bg-black/30 h-full">
+                    <div className="flex border-b border-white/5 shrink-0">
                         <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                         <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
                     </div>
@@ -436,19 +450,19 @@ function WatchContent() {
                                 ))}
                                 <div ref={chatEndRef} />
                             </div>
-                            <div className="p-3 flex gap-2 border-t border-white/5">
+                            <div className="p-3 flex gap-2 border-t border-white/5 shrink-0">
                                 <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                 <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
                             </div>
                         </div>
                     ) : (
                         <div className="flex-1 flex flex-col min-h-0">
-                            <div className="p-3 flex gap-2 border-b border-white/5">
+                            <div className="p-3 flex gap-2 border-b border-white/5 shrink-0">
                                 <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSearch()} placeholder="YouTube'da ara..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                 <Button size="sm" onClick={handleSearch} className="bg-red-600 h-10"><Search className="h-4 w-4" /></Button>
                             </div>
                             {searchResults.length > 0 && (
-                                <div className="p-2 space-y-1 max-h-32 overflow-y-auto border-b border-white/5">
+                                <div className="p-2 space-y-1 max-h-32 overflow-y-auto border-b border-white/5 shrink-0">
                                     {searchResults.map((item) => (
                                         <div key={item.id.videoId} onClick={() => addToQueue(item)} className="flex gap-2 p-2 rounded hover:bg-white/10 cursor-pointer">
                                             <img src={item.snippet.thumbnails.default.url} className="w-16 h-10 rounded" />
