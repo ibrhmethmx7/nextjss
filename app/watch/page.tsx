@@ -65,6 +65,7 @@ function WatchContent() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
+    const mobileChatContainerRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<any>(null);
     const isRemoteUpdate = useRef(false);
 
@@ -286,10 +287,13 @@ function WatchContent() {
 
     // Auto-scroll chat
     useEffect(() => {
-        if (chatMessages.length > 0 && chatContainerRef.current) {
+        if (chatMessages.length > 0) {
             setTimeout(() => {
                 if (chatContainerRef.current) {
                     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+                if (mobileChatContainerRef.current) {
+                    mobileChatContainerRef.current.scrollTop = mobileChatContainerRef.current.scrollHeight;
                 }
             }, 100);
         }
@@ -522,10 +526,9 @@ function WatchContent() {
                             </div>
                             {activePanel === "chat" ? (
                                 <div className="flex-1 flex flex-col min-h-0">
-                                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                                    <div ref={mobileChatContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 scroll-smooth">
                                         {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Henüz mesaj yok</p>}
                                         {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
-                                        <div ref={chatEndRef} />
                                     </div>
                                     <div className="p-2 flex gap-2 border-t border-white/5 shrink-0">
                                         <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
