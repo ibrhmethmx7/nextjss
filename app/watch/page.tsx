@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense, useRef } from "react";
+import { useEffect, useState, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -13,18 +13,20 @@ import { ref, update, push, set, onValue, get } from "firebase/database";
 type QueueItem = { id: string; title: string; url: string; thumbnail?: string; movieId?: string; };
 type ChatMessage = { user: string; text: string; time: number; };
 
+// YouTube Player Types
+declare global {
+    interface Window {
+        onYouTubeIframeAPIReady: () => void;
+        YT: any;
+    }
+}
+
 async function searchYouTube(query: string): Promise<any[]> {
     try {
         const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`);
         const data = await res.json();
         return data.items || [];
     } catch { return []; }
-}
-
-function getEmbedUrl(url: string): string {
-    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
-    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
-    return url;
 }
 
 function getVideoId(url: string): string | null {
@@ -62,10 +64,12 @@ function WatchContent() {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const playerRef = useRef<any>(null);
+    const playerContainerRef = useRef<HTMLDivElement>(null);
+    const isSeekingRef = useRef(false);
 
     // Initialize User and Room
     useEffect(() => {
-        // User ID Setup
         let uid = localStorage.getItem("cinema_user_id");
         if (!uid) {
             uid = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -84,12 +88,10 @@ function WatchContent() {
             window.history.replaceState({}, "", `${window.location.pathname}?room=${room}${initialUrl ? `&url=${encodeURIComponent(initialUrl)}` : ""}`);
         }
 
-        // Check/Set Creator
         const checkCreator = async () => {
             const roomRef = ref(database, `rooms/${room}`);
             const snapshot = await get(roomRef);
             if (!snapshot.exists()) {
-                // Create room
                 await set(roomRef, { creatorId: uid, creatorName: username, created: Date.now() });
                 setIsCreator(true);
             } else {
@@ -99,9 +101,6 @@ function WatchContent() {
         };
         checkCreator();
 
-        // Initial Queue Setup (only if queue is empty and we have initial params)
-        // We should only do this if we are the creator or if the room is new?
-        // For now, let's just push if the queue is empty in the DB.
         if (initialUrl) {
             const queueRef = ref(database, `rooms/${room}/queue`);
             get(queueRef).then((snap) => {
@@ -125,21 +124,18 @@ function WatchContent() {
     useEffect(() => {
         if (!roomId) return;
 
-        // Chat
         const chatRef = ref(database, `rooms/${roomId}/messages`);
         const unsubChat = onValue(chatRef, (snapshot) => {
             const data = snapshot.val();
             if (data) setChatMessages((Object.values(data) as ChatMessage[]).slice(-50));
         });
 
-        // Queue
         const queueRef = ref(database, `rooms/${roomId}/queue`);
         const unsubQueue = onValue(queueRef, (snapshot) => {
             const data = snapshot.val();
             if (data) setQueue(data as QueueItem[]);
         });
 
-        // Current Index
         const indexRef = ref(database, `rooms/${roomId}/currentIndex`);
         const unsubIndex = onValue(indexRef, (snapshot) => {
             const data = snapshot.val();
@@ -152,6 +148,128 @@ function WatchContent() {
             unsubIndex();
         };
     }, [roomId]);
+
+    // Video Sync Logic
+    useEffect(() => {
+        if (!roomId || !playerRef.current) return;
+
+        const playerStateRef = ref(database, `rooms/${roomId}/playerState`);
+
+        const unsubPlayer = onValue(playerStateRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            // If I am creator, I don't listen to updates (I send them)
+            // UNLESS I want to support multiple controls? No, let's stick to creator-only control for now.
+            if (isCreator) return;
+
+            const player = playerRef.current;
+            const playerStatus = player.getPlayerState();
+            const currentTime = player.getCurrentTime();
+
+            // Sync Play/Pause
+            if (data.isPlaying && playerStatus !== 1 && playerStatus !== 3) { // 1=playing, 3=buffering
+                player.playVideo();
+            } else if (!data.isPlaying && playerStatus === 1) {
+                player.pauseVideo();
+            }
+
+            // Sync Time (if drift > 2 seconds)
+            if (Math.abs(currentTime - data.currentTime) > 2) {
+                player.seekTo(data.currentTime, true);
+            }
+        });
+
+        return () => unsubPlayer();
+    }, [roomId, isCreator]);
+
+    // Creator: Send updates
+    useEffect(() => {
+        if (!isCreator || !roomId || !playerRef.current) return;
+
+        const interval = setInterval(() => {
+            const player = playerRef.current;
+            if (player && player.getPlayerState) {
+                const currentTime = player.getCurrentTime();
+                const isPlaying = player.getPlayerState() === 1;
+
+                update(ref(database, `rooms/${roomId}/playerState`), {
+                    currentTime,
+                    isPlaying,
+                    timestamp: Date.now()
+                });
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [isCreator, roomId]);
+
+    // Initialize YouTube Player
+    const currentVideo = queue[currentIndex];
+
+    useEffect(() => {
+        if (!currentVideo) return;
+
+        const videoId = getVideoId(currentVideo.url);
+        if (!videoId) return;
+
+        if (!window.YT) {
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+        }
+
+        const initPlayer = () => {
+            if (playerRef.current) {
+                playerRef.current.loadVideoById(videoId);
+                return;
+            }
+
+            playerRef.current = new window.YT.Player('youtube-player', {
+                height: '100%',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'playsinline': 1,
+                    'autoplay': 1,
+                    'controls': 1, // Show native controls
+                    'disablekb': 0,
+                    'modestbranding': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        };
+
+        if (window.YT && window.YT.Player) {
+            initPlayer();
+        } else {
+            window.onYouTubeIframeAPIReady = initPlayer;
+        }
+
+    }, [currentVideo]);
+
+    const onPlayerReady = (event: any) => {
+        // Player ready
+    };
+
+    const onPlayerStateChange = (event: any) => {
+        if (!isCreator) return;
+
+        const player = event.target;
+        const isPlaying = event.data === 1;
+        const currentTime = player.getCurrentTime();
+
+        update(ref(database, `rooms/${roomId}/playerState`), {
+            isPlaying,
+            currentTime,
+            timestamp: Date.now()
+        });
+    };
 
     // Auto-scroll chat
     useEffect(() => {
@@ -166,13 +284,6 @@ function WatchContent() {
         alert("Oda linki kopyalandı! Arkadaşlarına gönder.");
     };
 
-    // Fullscreen Listener
-    useEffect(() => {
-        const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
-        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    }, []);
-
     const toggleFullscreen = async () => {
         if (!document.fullscreenElement && containerRef.current) {
             try { await containerRef.current.requestFullscreen(); }
@@ -184,7 +295,13 @@ function WatchContent() {
         }
     };
 
-    const currentVideo = queue[currentIndex];
+    // Listen for fullscreen change
+    useEffect(() => {
+        const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, []);
+
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
@@ -219,7 +336,7 @@ function WatchContent() {
     };
 
     const removeFromQueue = (index: number) => {
-        if (!isCreator) return; // Only creator can manage queue? Or maybe everyone? Let's restrict to creator for now as requested.
+        if (!isCreator) return;
         const newQueue = queue.filter((_, i) => i !== index);
         set(ref(database, `rooms/${roomId}/queue`), newQueue);
         if (currentIndex >= newQueue.length - 1) {
@@ -322,12 +439,8 @@ function WatchContent() {
 
                 {/* Video Container */}
                 <div className={`relative w-full shrink-0 ${isFullscreen ? 'flex-1 h-full' : ''}`} style={!isFullscreen ? { paddingTop: "56.25%" } : {}}>
-                    <iframe
-                        src={getEmbedUrl(currentVideo.url)}
-                        className="absolute inset-0 w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    />
+                    {/* YouTube Player Div */}
+                    <div id="youtube-player" className="absolute inset-0 w-full h-full" />
 
                     {/* Fullscreen Overlay */}
                     {isFullscreen && (
@@ -374,7 +487,7 @@ function WatchContent() {
                 {/* Normal Controls & Mobile Panel - Hidden in Fullscreen */}
                 {!isFullscreen && (
                     <>
-                        <div className="p-3 flex items-center justify-between gap-2 border-b border-white/5 bg-black/40">
+                        <div className="p-3 flex items-center justify-between gap-2 border-b border-white/5 bg-black/40 shrink-0">
                             <Button size="sm" variant="outline" onClick={markCompleted} className="border-green-500/50 text-green-400 text-xs hover:bg-green-500/10">
                                 <CheckCircle className="h-4 w-4 mr-1" /> Bitirdik
                             </Button>
@@ -386,7 +499,7 @@ function WatchContent() {
 
                         {/* Mobile Panel */}
                         <div className="lg:hidden flex-1 border-t border-white/5 bg-black/50 flex flex-col" style={{ minHeight: 250 }}>
-                            <div className="flex border-b border-white/5">
+                            <div className="flex border-b border-white/5 shrink-0">
                                 <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                                 <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
                             </div>
@@ -397,19 +510,19 @@ function WatchContent() {
                                         {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
                                         <div ref={chatEndRef} />
                                     </div>
-                                    <div className="p-2 flex gap-2 border-t border-white/5">
+                                    <div className="p-2 flex gap-2 border-t border-white/5 shrink-0">
                                         <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                         <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex-1 flex flex-col min-h-0">
-                                    <div className="p-2 flex gap-2 border-b border-white/5">
+                                    <div className="p-2 flex gap-2 border-b border-white/5 shrink-0">
                                         <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSearch()} placeholder="YouTube'da ara..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                         <Button size="sm" onClick={handleSearch} className="bg-red-600 h-10"><Search className="h-4 w-4" /></Button>
                                     </div>
                                     {searchResults.length > 0 && (
-                                        <div className="p-2 space-y-1 max-h-24 overflow-y-auto border-b border-white/5">
+                                        <div className="p-2 space-y-1 max-h-24 overflow-y-auto border-b border-white/5 shrink-0">
                                             {searchResults.map((item) => <div key={item.id.videoId} onClick={() => addToQueue(item)} className="flex gap-2 p-1 rounded hover:bg-white/10 cursor-pointer"><img src={item.snippet.thumbnails.default.url} className="w-10 h-6 rounded" /><p className="text-xs line-clamp-1">{item.snippet.title}</p></div>)}
                                         </div>
                                     )}
