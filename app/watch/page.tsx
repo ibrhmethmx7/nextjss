@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Trash2, SkipForward, List, CheckCircle, Search, MessageCircle, Send, Maximize2, Minimize2 } from "lucide-react";
 import Link from "next/link";
 import { database, YOUTUBE_API_KEY } from "@/lib/firebase";
+import SurpriseEffect from "@/components/SurpriseEffect";
 import { ref, update, push, set, onValue, get } from "firebase/database";
 
 type QueueItem = { id: string; title: string; url: string; thumbnail?: string; movieId?: string; };
@@ -193,7 +194,7 @@ function WatchContent() {
 
     // Creator: Send updates (Periodic)
     useEffect(() => {
-        if (!isCreator || !roomId || !playerRef.current) return;
+        if (!isCreator || !roomId) return;
 
         const interval = setInterval(() => {
             const player = playerRef.current;
@@ -620,6 +621,8 @@ function WatchContent() {
                     )}
                 </div>
             )}
+            {/* Surprise Effect Component */}
+            <SurpriseEffect roomId={roomId} />
         </div>
     );
 }
