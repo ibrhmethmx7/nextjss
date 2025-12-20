@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { database } from "@/lib/firebase";
 import { ref, set } from "firebase/database";
 import { Heart, Sparkles, MessageCircleHeart } from "lucide-react";
 
-export default function SurprisePage() {
+function SurpriseContent() {
     const searchParams = useSearchParams();
     const [roomId, setRoomId] = useState("");
     const [message, setMessage] = useState("");
@@ -88,5 +88,13 @@ export default function SurprisePage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function SurprisePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Yükleniyor...</div>}>
+            <SurpriseContent />
+        </Suspense>
     );
 }
