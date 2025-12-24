@@ -267,7 +267,8 @@ export default function DashboardPage() {
                                     key={movie.id}
                                     onClick={() => {
                                         if (movie.videoUrl) {
-                                            router.push(`/watch?url=${encodeURIComponent(movie.videoUrl)}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`);
+                                            const startTime = movie.watchProgress ? Math.floor(Math.max(0, movie.watchProgress - 5)) : 0;
+                                            router.push(`/watch?url=${encodeURIComponent(movie.videoUrl)}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}&startTime=${startTime}`);
                                         } else {
                                             router.push(`/movie/${movie.id}`);
                                         }
