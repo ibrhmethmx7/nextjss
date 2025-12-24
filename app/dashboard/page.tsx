@@ -16,6 +16,9 @@ type Movie = {
     status: "watching" | "watchlist" | "completed";
     videoUrl?: string;
     addedAt: number;
+    watchProgress?: number;
+    watchProgressPercent?: number;
+    lastWatched?: number;
 };
 
 export default function DashboardPage() {
@@ -212,9 +215,12 @@ export default function DashboardPage() {
                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <span className="material-icons-round text-5xl">play_circle</span>
                                         </div>
-                                        {/* Progress bar simulation */}
+                                        {/* Progress bar - real progress */}
                                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                                            <div className="h-full bg-red-600 w-1/3" />
+                                            <div
+                                                className="h-full bg-red-600 transition-all"
+                                                style={{ width: `${movie.watchProgressPercent || 0}%` }}
+                                            />
                                         </div>
                                     </div>
                                     <p className="mt-2 text-sm font-medium truncate">{movie.title}</p>

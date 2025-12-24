@@ -253,15 +253,27 @@ function WatchContent() {
     useEffect(() => {
         const interval = setInterval(() => {
             if (playerRef.current && playerRef.current.getCurrentTime) {
-                setCurrentTime(playerRef.current.getCurrentTime());
-                setDuration(playerRef.current.getDuration());
+                const time = playerRef.current.getCurrentTime();
+                const dur = playerRef.current.getDuration();
+                setCurrentTime(time);
+                setDuration(dur);
                 setIsPlaying(playerRef.current.getPlayerState() === 1);
                 setVolume(playerRef.current.getVolume());
                 setIsMuted(playerRef.current.isMuted());
+
+                // Save progress every 10 seconds for the movie
+                if (movieId && time > 0 && dur > 0) {
+                    const progress = (time / dur) * 100;
+                    update(ref(database, `movies/${movieId}`), {
+                        watchProgress: time,
+                        watchProgressPercent: Math.round(progress),
+                        lastWatched: Date.now()
+                    });
+                }
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [movieId]);
 
     // Initialize YouTube Player
     const currentVideo = queue[currentIndex];
@@ -314,10 +326,26 @@ function WatchContent() {
 
     }, [currentVideo]);
 
-    const onPlayerReady = (event: any) => {
+    const onPlayerReady = async (event: any) => {
         setDuration(event.target.getDuration());
         setVolume(event.target.getVolume());
         setIsMuted(event.target.isMuted());
+
+        // Resume from saved progress if available
+        if (movieId) {
+            try {
+                const movieRef = ref(database, `movies/${movieId}`);
+                const snapshot = await get(movieRef);
+                const data = snapshot.val();
+                if (data?.watchProgress && data.watchProgress > 10) {
+                    // Seek to saved position (minus 5 seconds for context)
+                    const resumeTime = Math.max(0, data.watchProgress - 5);
+                    event.target.seekTo(resumeTime, true);
+                }
+            } catch (e) {
+                console.error("Error loading watch progress:", e);
+            }
+        }
     };
 
     const onPlayerStateChange = (event: any) => {
