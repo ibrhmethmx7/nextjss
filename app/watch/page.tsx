@@ -304,7 +304,7 @@ function WatchContent() {
         }
 
         const initPlayer = () => {
-            if (playerRef.current) {
+            if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
                 playerRef.current.loadVideoById(videoId);
                 return;
             }
