@@ -66,8 +66,10 @@ export default function DashboardPage() {
     const watchingMovies = movies.filter((m) => m.status === "watching");
     const watchlistMovies = movies.filter((m) => m.status === "watchlist");
     const completedMovies = movies.filter((m) => m.status === "completed");
-    // Continue watching: ANY movie with progress (regardless of status)
-    const continueWatchingMovies = movies.filter((m) => m.watchProgress && m.watchProgress > 0).sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0));
+    // Continue watching: movies with progress OR status=watching (so always shows something)
+    const continueWatchingMovies = movies
+        .filter((m) => m.watchProgress || m.status === "watching")
+        .sort((a, b) => (b.lastWatched || b.addedAt || 0) - (a.lastWatched || a.addedAt || 0));
 
     const tabs = [
         { id: "watching", label: "Devam Ettiklerimiz", icon: "play_circle", movies: watchingMovies },
