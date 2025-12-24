@@ -117,7 +117,8 @@ function WatchContent() {
 
         if (!searchParams.get("room")) {
             const movieIdParam = movieId ? `&movieId=${movieId}` : "";
-            window.history.replaceState({}, "", `${window.location.pathname}?room=${room}${initialUrl ? `&url=${encodeURIComponent(initialUrl)}` : ""}${movieIdParam}`);
+            const startTimeParam = startTime > 0 ? `&startTime=${startTime}` : "";
+            window.history.replaceState({}, "", `${window.location.pathname}?room=${room}${initialUrl ? `&url=${encodeURIComponent(initialUrl)}` : ""}${movieIdParam}${startTimeParam}`);
         }
 
         const checkCreator = async () => {
@@ -341,16 +342,28 @@ function WatchContent() {
 
     const onPlayerReady = (event: any) => {
         const player = event.target;
-        setDuration(player.getDuration());
-        setVolume(player.getVolume());
-        setIsMuted(player.isMuted());
+        console.log("🎬 onPlayerReady called, startTime:", startTime);
+
+        if (typeof player.getDuration === 'function') {
+            setDuration(player.getDuration());
+        }
+        if (typeof player.getVolume === 'function') {
+            setVolume(player.getVolume());
+        }
+        if (typeof player.isMuted === 'function') {
+            setIsMuted(player.isMuted());
+        }
 
         // Resume from URL startTime parameter (most reliable)
-        if (startTime > 0) {
+        if (startTime > 0 && typeof player.seekTo === 'function') {
+            console.log("🎬 Seeking to:", startTime, "seconds");
             setTimeout(() => {
                 player.seekTo(startTime, true);
-                player.playVideo();
-            }, 1000);
+                if (typeof player.playVideo === 'function') {
+                    player.playVideo();
+                }
+                console.log("🎬 SeekTo executed!");
+            }, 1500);
         }
     };
 
