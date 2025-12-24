@@ -199,7 +199,7 @@ export default function DashboardPage() {
                             İzlemeye Devam Et
                         </h3>
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                            {watchingMovies.filter(m => m.watchProgress && m.watchProgress > 10).sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0)).map((movie) => (
+                            {watchingMovies.filter(m => m.watchProgress && m.watchProgress > 0).sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0)).map((movie) => (
                                 <Link
                                     key={movie.id}
                                     href={`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}&startTime=${Math.floor(Math.max(0, (movie.watchProgress || 0) - 5))}`}
