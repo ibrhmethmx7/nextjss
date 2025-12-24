@@ -1,120 +1,79 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Heart, Film, Gamepad2, Map, Calendar, Music } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-const features = [
-  {
-    icon: Film,
-    title: "Sinema Odası",
-    desc: "Birlikte film izleyelim",
-    href: "/watch",
-    color: "text-pink-400",
-    delay: 0.1
-  },
-  {
-    icon: Gamepad2,
-    title: "Oyun Alanı",
-    desc: "Eğlenceli mini oyunlar",
-    href: "/games",
-    color: "text-purple-400",
-    delay: 0.2
-  },
-  {
-    icon: Map,
-    title: "Anı Haritası",
-    desc: "Gezdiğimiz yerler",
-    href: "/map",
-    color: "text-blue-400",
-    delay: 0.3
-  },
-  {
-    icon: Calendar,
-    title: "Takvim",
-    desc: "Özel günlerimiz",
-    href: "/calendar",
-    color: "text-teal-400",
-    delay: 0.4
-  },
-  {
-    icon: Music,
-    title: "Müzik Kutusu",
-    desc: "Bizim şarkılarımız",
-    href: "/music",
-    color: "text-yellow-400",
-    delay: 0.5
-  },
-  {
-    icon: Heart,
-    title: "Sürpriz",
-    desc: "Sana özel bir not",
-    href: "/surprise",
-    color: "text-red-500",
-    delay: 0.6
-  }
-];
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-export default function Home() {
+  const handleLogin = (user: "ben" | "sen", name: string) => {
+    setLoading(true);
+    localStorage.setItem("cinema_user", user);
+    localStorage.setItem("cinema_user_name", name);
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 500);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+    <div className="min-h-screen bg-[#141414] flex flex-col">
+      {/* Netflix-style Header */}
+      <header className="p-6 md:p-8">
+        <div className="flex items-center gap-2">
+          <span className="material-icons-round text-red-600 text-4xl">movie</span>
+          <span className="text-red-600 font-bold text-2xl tracking-tight">SİNEMAMIZ</span>
+        </div>
+      </header>
 
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="text-center mb-16 relative z-10"
-      >
-        <h1 className="font-romantic text-6xl md:text-8xl text-gradient mb-4 drop-shadow-lg">
-          Bizim Dünyamız
-        </h1>
-        <p className="text-muted-foreground text-lg md:text-xl max-w-md mx-auto font-light tracking-wide">
-          Seninle geçen her an, sonsuz bir masalın en güzel sayfası...
-        </p>
-      </motion.div>
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          {/* Login Box */}
+          <div className="bg-black/70 rounded-lg p-8 md:p-12 backdrop-blur-sm">
+            <h1 className="text-3xl font-bold mb-8 text-white">Kim İzliyor?</h1>
 
-      {/* Grid Menu */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full z-10">
-        {features.map((item, index) => (
-          <Link href={item.href} key={index} className="block group">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: item.delay, duration: 0.5 }}
-              className="glass glass-hover p-6 rounded-3xl h-full flex flex-col items-center text-center relative overflow-hidden"
-            >
-              {/* Hover Glow Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Profile Selection */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Ben */}
+              <button
+                onClick={() => handleLogin("ben", "İbrahim")}
+                disabled={loading}
+                className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:bg-white/5 transition-all disabled:opacity-50"
+              >
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center group-hover:ring-4 ring-white transition-all">
+                  <span className="material-icons-round text-white text-5xl">person</span>
+                </div>
+                <span className="text-gray-400 group-hover:text-white transition-colors text-lg">İbrahim</span>
+              </button>
 
-              <div className={`p-4 rounded-2xl bg-white/5 mb-4 group-hover:scale-110 transition-transform duration-300 ${item.color}`}>
-                <item.icon className="w-8 h-8" />
+              {/* Sen */}
+              <button
+                onClick={() => handleLogin("sen", "Sevgilim")}
+                disabled={loading}
+                className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:bg-white/5 transition-all disabled:opacity-50"
+              >
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center group-hover:ring-4 ring-white transition-all">
+                  <span className="material-icons-round text-white text-5xl">favorite</span>
+                </div>
+                <span className="text-gray-400 group-hover:text-white transition-colors text-lg">Sevgilim</span>
+              </button>
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+              <div className="mt-8 flex justify-center">
+                <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
               </div>
+            )}
+          </div>
 
-              <h3 className="text-xl font-semibold mb-2 text-white/90 group-hover:text-white transition-colors">
-                {item.title}
-              </h3>
-
-              <p className="text-sm text-white/50 group-hover:text-white/70 transition-colors">
-                {item.desc}
-              </p>
-            </motion.div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Footer Quote */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 1 }}
-        className="mt-16 text-center z-10"
-      >
-        <p className="font-romantic text-2xl text-white/30">
-          "Seni seviyorum, her şeyden çok..."
-        </p>
-      </motion.div>
-
+          {/* Footer Text */}
+          <p className="text-center text-gray-500 text-sm mt-8">
+            Birlikte izlemek için profil seç 🎬
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

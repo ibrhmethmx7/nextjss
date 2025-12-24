@@ -1,39 +1,40 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { memo } from "react";
 
 interface AmbilightEffectProps {
     thumbnailUrl: string;
 }
 
-export default function AmbilightEffect({ thumbnailUrl }: AmbilightEffectProps) {
+// Memoize to prevent unnecessary re-renders
+const AmbilightEffect = memo(function AmbilightEffect({ thumbnailUrl }: AmbilightEffectProps) {
     if (!thumbnailUrl) return null;
 
     return (
-        <div className="absolute -inset-10 md:-inset-20 -z-10 pointer-events-none">
-            <motion.div
-                key={thumbnailUrl}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.5 }}
+        <div className="absolute -inset-6 md:-inset-12 -z-10 pointer-events-none hidden md:block">
+            {/* GPU-accelerated container */}
+            <div
                 className="absolute inset-0 w-full h-full"
+                style={{
+                    willChange: 'opacity',
+                    transform: 'translateZ(0)'
+                }}
             >
-                {/* Primary Glow Layer */}
+                {/* Single optimized glow layer - reduced blur for better performance */}
                 <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center blur-[100px] scale-150 opacity-80"
-                    style={{ backgroundImage: `url(${thumbnailUrl})` }}
-                />
-
-                {/* Secondary Layer for Depth */}
-                <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center blur-[60px] scale-110 opacity-40 mix-blend-overlay"
-                    style={{ backgroundImage: `url(${thumbnailUrl})` }}
+                    className="absolute inset-0 w-full h-full bg-cover bg-center blur-[40px] scale-125 opacity-50"
+                    style={{
+                        backgroundImage: `url(${thumbnailUrl})`,
+                        willChange: 'transform',
+                        transform: 'translateZ(0)'
+                    }}
                 />
 
                 {/* Dark Overlay to keep focus on video */}
-                <div className="absolute inset-0 bg-black/40" />
-            </motion.div>
+                <div className="absolute inset-0 bg-black/50" />
+            </div>
         </div>
     );
-}
+});
+
+export default AmbilightEffect;

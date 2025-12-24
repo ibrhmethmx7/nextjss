@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Trash2, SkipForward, List, CheckCircle, Search, MessageCircle, Send, Maximize2, Minimize2 } from "lucide-react";
 import Link from "next/link";
 import { database, YOUTUBE_API_KEY } from "@/lib/firebase";
-import SurpriseEffect from "@/components/SurpriseEffect";
 import AmbilightEffect from "@/components/player/AmbilightEffect";
 import MobileSeekOverlay from "@/components/player/MobileSeekOverlay";
 import { ReactionOverlay } from "@/components/player/ReactionSystem";
@@ -250,7 +249,7 @@ function WatchContent() {
         return () => clearInterval(interval);
     }, [isCreator, roomId, sessionId]);
 
-    // Local Player State Polling (for UI)
+    // Local Player State Polling (for UI) - reduced frequency for performance
     useEffect(() => {
         const interval = setInterval(() => {
             if (playerRef.current && playerRef.current.getCurrentTime) {
@@ -260,7 +259,7 @@ function WatchContent() {
                 setVolume(playerRef.current.getVolume());
                 setIsMuted(playerRef.current.isMuted());
             }
-        }, 500);
+        }, 1000);
         return () => clearInterval(interval);
     }, []);
 
@@ -810,8 +809,6 @@ function WatchContent() {
                     )}
                 </div>
             )}
-            {/* Surprise Effect Component */}
-            <SurpriseEffect roomId={roomId} />
         </div>
     );
 }

@@ -1,23 +1,16 @@
 import type { Metadata } from "next";
-import { Inter, Great_Vibes } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import AuroraBackground from "@/components/ui/AuroraBackground";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
 
-const greatVibes = Great_Vibes({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-great-vibes",
-});
-
 export const metadata: Metadata = {
-  title: "Our Memories",
-  description: "A special place for us.",
+  title: "Bizim Sinemamız",
+  description: "Netflix tarzı kişisel sinema uygulaması",
 };
 
 export default function RootLayout({
@@ -26,19 +19,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        {/* Google Material Icons */}
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round"
+          rel="stylesheet"
+        />
+      </head>
       <body
         suppressHydrationWarning
         className={cn(
-          "min-h-screen bg-background font-sans antialiased selection:bg-primary/30 selection:text-primary-foreground",
-          inter.variable,
-          greatVibes.variable
+          "min-h-screen bg-[#141414] font-sans antialiased text-white",
+          inter.variable
         )}
       >
-        <AuroraBackground />
-        <main className="relative z-10">
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   );

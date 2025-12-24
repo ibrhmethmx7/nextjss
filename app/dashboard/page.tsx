@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-    Film, Play, Clock, CheckCircle, Plus, Star,
-    LogOut, PlayCircle, User
-} from "lucide-react";
 import { database } from "@/lib/firebase";
 import { ref, onValue } from "firebase/database";
 
@@ -29,21 +23,21 @@ export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState<"watching" | "watchlist" | "completed">("watching");
     const [currentUser, setCurrentUser] = useState<string>("");
     const [userName, setUserName] = useState<string>("");
+    const [searchOpen, setSearchOpen] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
-        // Check auth
         if (typeof window !== "undefined") {
             const user = localStorage.getItem("cinema_user");
             const name = localStorage.getItem("cinema_user_name");
             if (!user) {
-                window.location.href = "/";
+                router.push("/");
                 return;
             }
             setCurrentUser(user);
             setUserName(name || "");
         }
 
-        // Load movies from Firebase
         const moviesRef = ref(database, "movies");
         const unsubscribe = onValue(moviesRef, (snapshot) => {
             const data = snapshot.val();
@@ -57,173 +51,283 @@ export default function DashboardPage() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [router]);
 
     const handleLogout = () => {
         localStorage.removeItem("cinema_user");
         localStorage.removeItem("cinema_user_name");
-        window.location.href = "/";
+        router.push("/");
     };
 
     const filteredMovies = movies.filter((m) => m.status === activeTab);
+    const watchingMovies = movies.filter((m) => m.status === "watching");
+    const watchlistMovies = movies.filter((m) => m.status === "watchlist");
+    const completedMovies = movies.filter((m) => m.status === "completed");
 
     const tabs = [
-        { id: "watching", label: "İzliyoruz", icon: Play, color: "from-blue-600 to-blue-800" },
-        { id: "watchlist", label: "İzleyeceğiz", icon: Clock, color: "from-yellow-600 to-orange-700" },
-        { id: "completed", label: "Bitirdik", icon: CheckCircle, color: "from-green-600 to-emerald-700" },
+        { id: "watching", label: "Devam Ettiklerimiz", icon: "play_circle", movies: watchingMovies },
+        { id: "watchlist", label: "İzleyeceğiz", icon: "bookmark", movies: watchlistMovies },
+        { id: "completed", label: "Bitirdiklerimiz", icon: "check_circle", movies: completedMovies },
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#0f0f1a] to-[#0a0a0a] text-white pb-24">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
-                <div className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center">
-                            <Film className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <h1 className="font-bold text-lg">Bizim Sinemamız</h1>
-                            <p className="text-xs text-gray-500">Merhaba {userName} {currentUser === "ben" ? "💙" : "💖"}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Link href="/add-movie">
-                            <Button size="sm" className="bg-red-600 hover:bg-red-700 rounded-full h-9 w-9 p-0">
-                                <Plus className="h-5 w-5" />
-                            </Button>
+        <div className="min-h-screen bg-[#141414]">
+            {/* Netflix-style Header */}
+            <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent">
+                <div className="px-4 md:px-12 py-4 flex items-center justify-between">
+                    {/* Logo */}
+                    <div className="flex items-center gap-6">
+                        <Link href="/dashboard" className="flex items-center gap-2">
+                            <span className="material-icons-round text-red-600 text-3xl">movie</span>
+                            <span className="text-red-600 font-bold text-xl hidden md:block">SİNEMAMIZ</span>
                         </Link>
-                        <Button size="sm" variant="ghost" onClick={handleLogout} className="rounded-full h-9 w-9 p-0">
-                            <LogOut className="h-4 w-4" />
-                        </Button>
+
+                        {/* Desktop Navigation */}
+                        <nav className="hidden md:flex items-center gap-6">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    className={`text-sm transition-colors ${activeTab === tab.id
+                                        ? "text-white font-semibold"
+                                        : "text-gray-400 hover:text-gray-200"
+                                        }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </nav>
                     </div>
+
+                    {/* Right Side */}
+                    <div className="flex items-center gap-4">
+                        {/* Search Button */}
+                        <button
+                            onClick={() => setSearchOpen(!searchOpen)}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <span className="material-icons-outlined text-white">search</span>
+                        </button>
+
+                        {/* Add Movie */}
+                        <Link
+                            href="/add-movie"
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <span className="material-icons-outlined text-white">add</span>
+                        </Link>
+
+                        {/* Profile */}
+                        <div className="flex items-center gap-2">
+                            <div className={`w-8 h-8 rounded flex items-center justify-center ${currentUser === "ben" ? "bg-blue-600" : "bg-pink-600"
+                                }`}>
+                                <span className="material-icons-round text-white text-lg">
+                                    {currentUser === "ben" ? "person" : "favorite"}
+                                </span>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="hidden md:block text-sm text-gray-400 hover:text-white transition-colors"
+                            >
+                                Çıkış
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile Tabs */}
+                <div className="md:hidden px-4 pb-2 flex gap-4 overflow-x-auto scrollbar-hide">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-sm transition-all ${activeTab === tab.id
+                                ? "bg-white text-black font-medium"
+                                : "bg-white/10 text-white"
+                                }`}
+                        >
+                            <span className="material-icons-round text-lg">{tab.icon}</span>
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
             </header>
 
-            {/* Stats Cards */}
-            <div className="px-4 py-4">
-                <div className="grid grid-cols-3 gap-3">
-                    {tabs.map((tab) => {
-                        const count = movies.filter(m => m.status === tab.id).length;
-                        return (
-                            <motion.button
-                                key={tab.id}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`relative overflow-hidden rounded-2xl p-4 transition-all ${activeTab === tab.id ? "ring-2 ring-white/30" : ""
-                                    }`}
-                            >
-                                <div className={`absolute inset-0 bg-gradient-to-br ${tab.color} opacity-80`} />
-                                <div className="relative">
-                                    <tab.icon className="h-6 w-6 mb-2" />
-                                    <p className="text-2xl font-bold">{count}</p>
-                                    <p className="text-xs opacity-80">{tab.label}</p>
-                                </div>
-                            </motion.button>
-                        );
-                    })}
-                </div>
-            </div>
+            {/* Main Content */}
+            <main className="pt-28 md:pt-20 pb-20 px-4 md:px-12">
+                {/* Hero Banner - Featured Movie */}
+                {watchingMovies.length > 0 && activeTab === "watching" && (
+                    <div className="relative h-[50vh] md:h-[70vh] mb-8 rounded-lg overflow-hidden">
+                        <img
+                            src={watchingMovies[0].poster || `https://picsum.photos/seed/${watchingMovies[0].id}/1920/1080`}
+                            alt={watchingMovies[0].title}
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-transparent to-transparent" />
 
-            {/* Section Title */}
-            <div className="px-4 py-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                    {tabs.find(t => t.id === activeTab)?.label}
-                </h2>
-                <span className="text-sm text-gray-500">{filteredMovies.length} film</span>
-            </div>
-
-            {/* Movie Grid */}
-            <div className="px-4">
-                <AnimatePresence mode="wait">
-                    {filteredMovies.length === 0 ? (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="text-center py-16"
-                        >
-                            <Film className="h-16 w-16 mx-auto mb-4 text-gray-700" />
-                            <p className="text-gray-500 mb-4">Bu listede henüz film yok</p>
-                            <Link href="/add-movie">
-                                <Button className="bg-red-600 hover:bg-red-700 rounded-full">
-                                    <Plus className="h-4 w-4 mr-2" /> Film Ekle
-                                </Button>
-                            </Link>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-                        >
-                            {filteredMovies.map((movie, index) => (
-                                <motion.div
-                                    key={movie.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
+                        <div className="absolute bottom-8 left-0 right-0 px-8">
+                            <h2 className="text-3xl md:text-5xl font-bold mb-4">{watchingMovies[0].title}</h2>
+                            <div className="flex gap-3">
+                                <Link
+                                    href={`/watch?url=${encodeURIComponent(watchingMovies[0].videoUrl || "")}&title=${encodeURIComponent(watchingMovies[0].title)}&movieId=${watchingMovies[0].id}`}
+                                    className="flex items-center gap-2 bg-white text-black px-6 py-2 rounded font-semibold hover:bg-white/90 transition-colors"
                                 >
-                                    <Link href={`/movie/${movie.id}`}>
-                                        <div className="group cursor-pointer">
-                                            <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-gray-800 shadow-lg">
-                                                <img
-                                                    src={movie.poster || `https://picsum.photos/seed/${movie.id}/300/450`}
-                                                    alt={movie.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
+                                    <span className="material-icons-round">play_arrow</span>
+                                    Oynat
+                                </Link>
+                                <Link
+                                    href={`/movie/${watchingMovies[0].id}`}
+                                    className="flex items-center gap-2 bg-gray-500/70 text-white px-6 py-2 rounded font-semibold hover:bg-gray-500/50 transition-colors"
+                                >
+                                    <span className="material-icons-outlined">info</span>
+                                    Detaylar
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                                                {/* Overlay on hover */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <PlayCircle className="h-12 w-12 text-white" />
-                                                </div>
+                {/* Movie Rows */}
+                <section className="mb-8">
+                    <h3 className="text-xl md:text-2xl font-semibold mb-4 flex items-center gap-2">
+                        <span className="material-icons-round text-red-500">{tabs.find(t => t.id === activeTab)?.icon}</span>
+                        {tabs.find(t => t.id === activeTab)?.label}
+                        <span className="text-gray-500 text-sm font-normal ml-2">({filteredMovies.length})</span>
+                    </h3>
 
-                                                {/* Continue watching badge */}
-                                                {activeTab === "watching" && (
-                                                    <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                                        <Play className="h-3 w-3" /> Devam et
-                                                    </div>
-                                                )}
+                    {filteredMovies.length === 0 ? (
+                        <div className="text-center py-16">
+                            <span className="material-icons-outlined text-6xl text-gray-700 mb-4 block">movie</span>
+                            <p className="text-gray-500 mb-4">Bu listede henüz film yok</p>
+                            <Link
+                                href="/add-movie"
+                                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded transition-colors"
+                            >
+                                <span className="material-icons-round">add</span>
+                                Film Ekle
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                            {filteredMovies.map((movie) => (
+                                <Link
+                                    key={movie.id}
+                                    href={`/movie/${movie.id}`}
+                                    className="group relative aspect-[2/3] rounded overflow-hidden bg-gray-800"
+                                >
+                                    <img
+                                        src={movie.poster || `https://picsum.photos/seed/${movie.id}/300/450`}
+                                        alt={movie.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
 
-                                                {/* Ratings */}
-                                                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
-                                                    <div className="flex justify-between items-center">
-                                                        {movie.myRating && (
-                                                            <span className="bg-blue-500/80 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                                💙 {movie.myRating}
-                                                            </span>
-                                                        )}
-                                                        {movie.theirRating && (
-                                                            <span className="bg-pink-500/80 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                                💖 {movie.theirRating}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                    {/* Hover Overlay */}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                        <h4 className="text-sm font-semibold line-clamp-2">{movie.title}</h4>
+                                        {movie.year && <p className="text-xs text-gray-400">{movie.year}</p>}
+
+                                        {/* Quick Play Button */}
+                                        {movie.videoUrl && (
+                                            <div
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    router.push(`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`);
+                                                }}
+                                                className="mt-2 flex items-center justify-center gap-1 bg-white text-black text-xs py-1.5 rounded font-medium hover:bg-white/90"
+                                            >
+                                                <span className="material-icons-round text-sm">play_arrow</span>
+                                                İzle
                                             </div>
-                                            <h3 className="mt-2 text-sm font-medium truncate">{movie.title}</h3>
-                                            {movie.year && <p className="text-xs text-gray-500">{movie.year}</p>}
-                                        </div>
-                                    </Link>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                                        )}
+                                    </div>
 
-            {/* Bottom Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 p-4 safe-area-pb">
-                <div className="flex justify-center gap-4">
-                    <Link href="/movies">
-                        <Button className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 rounded-full px-6">
-                            <Play className="h-4 w-4 mr-2" /> Birlikte İzle
-                        </Button>
+                                    {/* Status Badge */}
+                                    {movie.status === "watching" && (
+                                        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
+                                            <span className="material-icons-round text-xs">play_arrow</span>
+                                        </div>
+                                    )}
+
+                                    {/* Ratings */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent opacity-100 group-hover:opacity-0 transition-opacity">
+                                        <div className="flex gap-1">
+                                            {movie.myRating && (
+                                                <span className="text-xs bg-blue-500/80 px-1.5 py-0.5 rounded">💙{movie.myRating}</span>
+                                            )}
+                                            {movie.theirRating && (
+                                                <span className="text-xs bg-pink-500/80 px-1.5 py-0.5 rounded">💖{movie.theirRating}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                {/* Other Sections (if not actively viewing that tab) */}
+                {activeTab !== "watching" && watchingMovies.length > 0 && (
+                    <MovieRow title="Devam Ettiklerimiz" icon="play_circle" movies={watchingMovies} router={router} />
+                )}
+                {activeTab !== "watchlist" && watchlistMovies.length > 0 && (
+                    <MovieRow title="İzleyeceğiz" icon="bookmark" movies={watchlistMovies} router={router} />
+                )}
+                {activeTab !== "completed" && completedMovies.length > 0 && (
+                    <MovieRow title="Bitirdiklerimiz" icon="check_circle" movies={completedMovies} router={router} />
+                )}
+            </main>
+
+            {/* Mobile Bottom Nav */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 md:hidden">
+                <div className="flex justify-around py-2">
+                    <Link href="/dashboard" className="flex flex-col items-center gap-1 p-2">
+                        <span className="material-icons-round text-white">home</span>
+                        <span className="text-xs text-gray-400">Ana Sayfa</span>
                     </Link>
+                    <Link href="/add-movie" className="flex flex-col items-center gap-1 p-2">
+                        <span className="material-icons-outlined text-gray-400">add_circle_outline</span>
+                        <span className="text-xs text-gray-400">Ekle</span>
+                    </Link>
+                    <button onClick={handleLogout} className="flex flex-col items-center gap-1 p-2">
+                        <span className="material-icons-outlined text-gray-400">logout</span>
+                        <span className="text-xs text-gray-400">Çıkış</span>
+                    </button>
                 </div>
-            </div>
+            </nav>
         </div>
+    );
+}
+
+// Movie Row Component
+function MovieRow({ title, icon, movies, router }: { title: string; icon: string; movies: Movie[]; router: any }) {
+    return (
+        <section className="mb-8">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300">
+                <span className="material-icons-round text-lg">{icon}</span>
+                {title}
+            </h3>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4">
+                {movies.slice(0, 10).map((movie) => (
+                    <Link
+                        key={movie.id}
+                        href={`/movie/${movie.id}`}
+                        className="flex-shrink-0 w-32 md:w-40 group"
+                    >
+                        <div className="aspect-[2/3] rounded overflow-hidden bg-gray-800 relative">
+                            <img
+                                src={movie.poster || `https://picsum.photos/seed/${movie.id}/300/450`}
+                                alt={movie.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="material-icons-round text-4xl">play_circle</span>
+                            </div>
+                        </div>
+                        <p className="text-sm mt-2 truncate text-gray-300">{movie.title}</p>
+                    </Link>
+                ))}
+            </div>
+        </section>
     );
 }
