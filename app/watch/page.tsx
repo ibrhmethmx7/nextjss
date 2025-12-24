@@ -138,13 +138,16 @@ function WatchContent() {
                 if (!snap.exists()) {
                     const decodedUrl = decodeURIComponent(initialUrl);
                     const decodedTitle = decodeURIComponent(initialTitle) || "Video";
-                    const initialQueue = [{
+                    const initialQueue: any[] = [{
                         id: "initial",
                         title: decodedTitle,
                         url: decodedUrl,
                         thumbnail: getThumbnail(decodedUrl),
-                        movieId: movieId || undefined
                     }];
+                    // Only add movieId if it exists
+                    if (movieId) {
+                        initialQueue[0].movieId = movieId;
+                    }
                     set(queueRef, initialQueue);
                 }
             });
