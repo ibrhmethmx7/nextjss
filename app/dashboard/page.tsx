@@ -86,7 +86,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-6">
                         <Link href="/dashboard" className="flex items-center gap-2">
                             <span className="material-icons-round text-red-600 text-3xl">movie</span>
-                            <span className="text-red-600 font-bold text-xl hidden md:block">SİNEMAMIZ</span>
+                            <span className="text-red-600 font-bold text-xl hidden md:block">SELOFLIX</span>
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -276,9 +276,10 @@ export default function DashboardPage() {
                                     className="group relative aspect-[2/3] rounded overflow-hidden bg-gray-800 cursor-pointer"
                                 >
                                     <img
-                                        src={movie.poster || `https://picsum.photos/seed/${movie.id}/300/450`}
+                                        src={movie.poster || `https://picsum.photos/seed/${movie.id}/400/600`}
                                         alt={movie.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                                        loading="lazy"
                                     />
 
                                     {/* Play icon overlay */}

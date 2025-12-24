@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bizim Sinemamız",
+  title: "SELOFLIX",
   description: "Netflix tarzı kişisel sinema uygulaması",
 };
 

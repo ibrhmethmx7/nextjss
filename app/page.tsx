@@ -22,7 +22,7 @@ export default function LoginPage() {
       <header className="p-6 md:p-8">
         <div className="flex items-center gap-2">
           <span className="material-icons-round text-red-600 text-4xl">movie</span>
-          <span className="text-red-600 font-bold text-2xl tracking-tight">SİNEMAMIZ</span>
+          <span className="text-red-600 font-bold text-2xl tracking-tight">SELOFLIX</span>
         </div>
       </header>
 
