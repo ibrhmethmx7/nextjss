@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft, Film, Plus, Star, Search, X, PlayCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { database, YOUTUBE_API_KEY } from "@/lib/firebase";
 import { ref, push, set } from "firebase/database";
@@ -23,6 +20,7 @@ async function searchYouTube(query: string): Promise<any[]> {
 }
 
 export default function AddMoviePage() {
+    const router = useRouter();
     const [title, setTitle] = useState("");
     const [poster, setPoster] = useState("");
     const [videoUrl, setVideoUrl] = useState("");
@@ -39,11 +37,11 @@ export default function AddMoviePage() {
     useEffect(() => {
         const user = localStorage.getItem("cinema_user");
         if (!user) {
-            window.location.href = "/";
+            router.push("/");
             return;
         }
         setCurrentUser(user);
-    }, []);
+    }, [router]);
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
@@ -97,7 +95,7 @@ export default function AddMoviePage() {
             }
 
             await set(newMovieRef, movieData);
-            window.location.href = "/dashboard";
+            router.push("/dashboard");
         } catch (error: any) {
             console.error("Firebase error:", error);
             alert(`Hata: ${error.message || "Bilinmeyen hata"}`);
@@ -106,136 +104,173 @@ export default function AddMoviePage() {
     };
 
     const statusOptions = [
-        { id: "watchlist", label: "İzleyeceğiz", color: "from-yellow-600 to-orange-600" },
-        { id: "watching", label: "İzliyoruz", color: "from-blue-600 to-indigo-600" },
-        { id: "completed", label: "Bitirdik", color: "from-green-600 to-emerald-600" },
+        { id: "watchlist", label: "İzleyeceğiz", icon: "bookmark" },
+        { id: "watching", label: "İzliyoruz", icon: "play_circle" },
+        { id: "completed", label: "Bitirdik", icon: "check_circle" },
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#0f0f1a] to-[#0a0a0a] text-white p-4 pb-20">
+        <div className="min-h-screen bg-[#141414] text-white">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-                <Link href="/dashboard">
-                    <Button variant="ghost" size="sm" className="rounded-full">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                </Link>
-                <h1 className="text-xl font-bold">Film/Video Ekle</h1>
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-lg mx-auto space-y-6"
-            >
-                {/* YouTube Search */}
-                <div className="space-y-3">
-                    <label className="text-sm text-gray-400 flex items-center gap-2">
-                        <PlayCircle className="h-4 w-4 text-red-500" /> YouTube'da Ara
-                    </label>
-                    <div className="flex gap-2">
-                        <Input
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                            placeholder="Film veya video ara..."
-                            className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
-                            style={{ fontSize: '16px' }}
-                        />
-                        <Button onClick={handleSearch} disabled={searching} className="bg-red-600 hover:bg-red-700 h-12 px-4 rounded-xl">
-                            <Search className="h-5 w-5" />
-                        </Button>
-                    </div>
-
-                    {searchResults.length > 0 && (
-                        <div className="bg-white/5 rounded-xl p-3 space-y-2 max-h-80 overflow-y-auto">
-                            {searchResults.map((item) => (
-                                <div
-                                    key={item.id.videoId}
-                                    onClick={() => selectVideo(item)}
-                                    className="flex gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
-                                >
-                                    <img src={item.snippet.thumbnails.default.url} alt="" className="w-28 h-20 object-cover rounded-lg" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium line-clamp-2">{item.snippet.title}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{item.snippet.channelTitle}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+            <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-white/5">
+                <div className="px-4 py-4 flex items-center gap-4">
+                    <Link href="/dashboard" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <span className="material-icons-round">arrow_back</span>
+                    </Link>
+                    <h1 className="text-xl font-semibold">Film Ekle</h1>
                 </div>
+            </header>
+
+            <main className="max-w-lg mx-auto p-4 space-y-6">
+                {/* YouTube Search - Only show if no video selected */}
+                {!selectedVideo && (
+                    <div className="space-y-3">
+                        <label className="flex items-center gap-2 text-sm text-gray-400">
+                            <span className="material-icons text-red-500 text-lg">youtube_searched_for</span>
+                            YouTube'da Ara
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                                placeholder="Film veya video ara..."
+                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500"
+                                style={{ fontSize: '16px' }}
+                            />
+                            <button
+                                onClick={handleSearch}
+                                disabled={searching}
+                                className="bg-red-600 hover:bg-red-700 px-4 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                <span className="material-icons">search</span>
+                            </button>
+                        </div>
+
+                        {/* Search Results */}
+                        {searchResults.length > 0 && (
+                            <div className="bg-white/5 rounded-lg p-2 space-y-1 max-h-80 overflow-y-auto">
+                                {searchResults.map((item) => (
+                                    <div
+                                        key={item.id.videoId}
+                                        onClick={() => selectVideo(item)}
+                                        className="flex gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
+                                    >
+                                        <img
+                                            src={item.snippet.thumbnails.default.url}
+                                            alt=""
+                                            className="w-28 h-20 object-cover rounded"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium line-clamp-2">{item.snippet.title}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{item.snippet.channelTitle}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Selected Video */}
                 {selectedVideo && (
-                    <div className="bg-white/5 rounded-xl p-4 relative">
-                        <button onClick={clearSelection} className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-red-600">
-                            <X className="h-4 w-4" />
+                    <div className="bg-white/5 rounded-lg p-4 relative">
+                        <button
+                            onClick={clearSelection}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 hover:bg-red-600 transition-colors"
+                        >
+                            <span className="material-icons text-sm">close</span>
                         </button>
                         <div className="flex gap-4">
-                            <img src={poster} alt="" className="w-24 h-32 object-cover rounded-lg" />
+                            <img src={poster} alt="" className="w-24 h-32 object-cover rounded" />
                             <div className="flex-1">
-                                <p className="font-medium">{title}</p>
+                                <p className="font-medium line-clamp-2">{title}</p>
                                 <p className="text-xs text-gray-500 mt-1">{selectedVideo.snippet.channelTitle}</p>
+                                <div className="mt-3 flex items-center gap-2 text-green-500 text-sm">
+                                    <span className="material-icons text-lg">check_circle</span>
+                                    Video seçildi
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Manual Input */}
+                {/* Manual Input - Only show if no video selected */}
                 {!selectedVideo && (
                     <div className="space-y-2">
-                        <label className="text-sm text-gray-400 flex items-center gap-2">
-                            <Film className="h-4 w-4" /> veya Manuel Ekle
+                        <label className="flex items-center gap-2 text-sm text-gray-400">
+                            <span className="material-icons-outlined text-lg">movie</span>
+                            veya Manuel Ekle
                         </label>
-                        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Film adı..." className="bg-white/5 border-white/10 text-white h-12 rounded-xl" />
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Film adı..."
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-white/30"
+                            style={{ fontSize: '16px' }}
+                        />
                     </div>
                 )}
 
                 {/* Status */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                     <label className="text-sm text-gray-400">Durum</label>
                     <div className="grid grid-cols-3 gap-2">
                         {statusOptions.map((s) => (
-                            <motion.button
+                            <button
                                 key={s.id}
                                 type="button"
-                                whileTap={{ scale: 0.95 }}
                                 onClick={() => setStatus(s.id as any)}
-                                className={`relative overflow-hidden rounded-xl p-3 transition-all ${status === s.id ? "ring-2 ring-white/50" : ""}`}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${status === s.id
+                                        ? "bg-white text-black"
+                                        : "bg-white/5 text-gray-400 hover:bg-white/10"
+                                    }`}
                             >
-                                <div className={`absolute inset-0 bg-gradient-to-br ${s.color} ${status === s.id ? "opacity-100" : "opacity-30"}`} />
-                                <span className="relative text-sm">{s.label}</span>
-                            </motion.button>
+                                <span className="material-icons-round">{s.icon}</span>
+                                <span className="text-xs">{s.label}</span>
+                            </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Rating */}
-                <div className="space-y-3 p-4 bg-white/5 rounded-2xl">
-                    <label className="text-sm text-gray-400 text-center block">Puanım</label>
-                    <div className="flex gap-1 justify-center">
+                <div className="bg-white/5 rounded-lg p-4">
+                    <label className="text-sm text-gray-400 text-center block mb-3">Puanım</label>
+                    <div className="flex gap-2 justify-center">
                         {[1, 2, 3, 4, 5].map((star) => (
-                            <motion.button key={star} type="button" whileTap={{ scale: 0.8 }} onClick={() => setMyRating(star === myRating ? 0 : star)}>
-                                <Star className={`h-8 w-8 ${star <= myRating ? "text-yellow-400 fill-current" : "text-gray-600"}`} />
-                            </motion.button>
+                            <button
+                                key={star}
+                                type="button"
+                                onClick={() => setMyRating(star === myRating ? 0 : star)}
+                                className="transition-transform hover:scale-110"
+                            >
+                                <span
+                                    className={`material-icons text-3xl ${star <= myRating ? "text-yellow-400" : "text-gray-600"
+                                        }`}
+                                >
+                                    {star <= myRating ? "star" : "star_border"}
+                                </span>
+                            </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Submit */}
-                <Button
+                <button
                     onClick={handleSubmit}
-                    className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 h-14 rounded-xl text-lg font-medium"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                     disabled={loading || !title}
                 >
                     {loading ? (
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full" />
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                        <><Plus className="h-5 w-5 mr-2" /> Ekle</>
+                        <>
+                            <span className="material-icons">add</span>
+                            Ekle
+                        </>
                     )}
-                </Button>
-            </motion.div>
+                </button>
+            </main>
         </div>
     );
 }

@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Star, Edit2, Trash2, ExternalLink } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { database } from "@/lib/firebase";
 import { ref, onValue, update, remove } from "firebase/database";
@@ -23,15 +20,17 @@ type Movie = {
 
 export default function MovieDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const movieId = params.id as string;
     const [movie, setMovie] = useState<Movie | null>(null);
     const [currentUser, setCurrentUser] = useState("");
     const [editRating, setEditRating] = useState(0);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     useEffect(() => {
         const user = localStorage.getItem("cinema_user");
         if (!user) {
-            window.location.href = "/";
+            router.push("/");
             return;
         }
         setCurrentUser(user);
@@ -46,7 +45,7 @@ export default function MovieDetailPage() {
         });
 
         return () => unsubscribe();
-    }, [movieId]);
+    }, [movieId, router]);
 
     const updateRating = async (rating: number) => {
         const movieRef = ref(database, `movies/${movieId}`);
@@ -63,154 +62,202 @@ export default function MovieDetailPage() {
     };
 
     const deleteMovie = async () => {
-        if (confirm("Bu filmi silmek istediğine emin misin?")) {
-            await remove(ref(database, `movies/${movieId}`));
-            window.location.href = "/dashboard";
-        }
+        await remove(ref(database, `movies/${movieId}`));
+        router.push("/dashboard");
     };
 
     if (!movie) {
         return (
-            <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-                <div className="animate-pulse">Yükleniyor...</div>
+            <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
-    const statusLabels: Record<string, string> = {
-        watching: "İzliyoruz",
-        watchlist: "İzleyeceğiz",
-        completed: "Bitirdik",
-    };
+    const statusOptions = [
+        { id: "watchlist", label: "İzleyeceğiz", icon: "bookmark" },
+        { id: "watching", label: "İzliyoruz", icon: "play_circle" },
+        { id: "completed", label: "Bitirdik", icon: "check_circle" },
+    ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#0f0f1a] to-[#0a0a0a] text-white">
-            {/* Hero */}
-            <div className="relative h-[50vh] overflow-hidden">
+        <div className="min-h-screen bg-[#141414] text-white">
+            {/* Hero Background */}
+            <div className="relative h-[60vh] md:h-[70vh]">
                 <img
                     src={movie.poster}
                     alt={movie.title}
                     className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-black/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-transparent to-transparent" />
 
-                {/* Back button */}
-                <Link href="/dashboard" className="absolute top-4 left-4 z-10">
-                    <Button variant="ghost" size="sm" className="rounded-full bg-black/50 backdrop-blur">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                </Link>
+                {/* Top Navigation */}
+                <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-10">
+                    <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                    >
+                        <span className="material-icons-round">arrow_back</span>
+                        <span className="hidden md:inline">Geri</span>
+                    </Link>
 
-                {/* Delete button */}
-                <button onClick={deleteMovie} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 backdrop-blur hover:bg-red-600 transition-colors">
-                    <Trash2 className="h-5 w-5" />
-                </button>
+                    <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="p-2 rounded-full bg-black/50 hover:bg-red-600 transition-colors"
+                    >
+                        <span className="material-icons-outlined">delete</span>
+                    </button>
+                </div>
+
+                {/* Movie Info */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
+                    <h1 className="text-3xl md:text-5xl font-bold mb-2">{movie.title}</h1>
+                    {movie.year && <p className="text-gray-400 text-lg mb-4">{movie.year}</p>}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3 mb-6">
+                        {movie.videoUrl ? (
+                            <Link
+                                href={`/watch?url=${encodeURIComponent(movie.videoUrl)}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`}
+                                className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-white/90 transition-colors"
+                            >
+                                <span className="material-icons-round">play_arrow</span>
+                                Oynat
+                            </Link>
+                        ) : (
+                            <Link
+                                href={`/movies?title=${encodeURIComponent(movie.title)}`}
+                                className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-white/90 transition-colors"
+                            >
+                                <span className="material-icons-round">play_arrow</span>
+                                Birlikte İzle
+                            </Link>
+                        )}
+                        <button className="flex items-center gap-2 bg-gray-500/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-500/50 transition-colors">
+                            <span className="material-icons-outlined">add</span>
+                            Listeye Ekle
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Content */}
-            <div className="px-4 -mt-20 relative z-10 pb-8">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
-                >
-                    {/* Title */}
-                    <div>
-                        <h1 className="text-3xl font-bold">{movie.title}</h1>
-                        {movie.year && <p className="text-gray-400 mt-1">{movie.year}</p>}
-                    </div>
+            <div className="px-4 md:px-12 py-8 space-y-8">
+                {/* Status Tabs */}
+                <div className="flex flex-wrap gap-2">
+                    {statusOptions.map((s) => (
+                        <button
+                            key={s.id}
+                            onClick={() => updateStatus(s.id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${movie.status === s.id
+                                    ? "bg-white text-black"
+                                    : "bg-white/10 text-white hover:bg-white/20"
+                                }`}
+                        >
+                            <span className="material-icons-round text-lg">{s.icon}</span>
+                            {s.label}
+                        </button>
+                    ))}
+                </div>
 
-                    {/* Status */}
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                        {["watchlist", "watching", "completed"].map((s) => (
-                            <Button
-                                key={s}
-                                size="sm"
-                                variant={movie.status === s ? "default" : "outline"}
-                                className={`rounded-full whitespace-nowrap ${movie.status === s ? "bg-red-600" : "border-white/10"
-                                    }`}
-                                onClick={() => updateStatus(s)}
-                            >
-                                {statusLabels[s]}
-                            </Button>
-                        ))}
-                    </div>
-
-                    {/* Ratings */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                            <p className="text-sm text-blue-400 mb-2 text-center">💙 Onun Puanı</p>
-                            <div className="flex justify-center gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                        key={star}
-                                        className={`h-6 w-6 ${star <= (movie.myRating || 0) ? "text-yellow-400 fill-current" : "text-gray-600"
-                                            }`}
-                                    />
-                                ))}
+                {/* Ratings Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* İbrahim's Rating */}
+                    <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 rounded-lg p-6 border border-blue-500/20">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                                <span className="material-icons-round">person</span>
                             </div>
-                            {currentUser === "ben" && (
-                                <p className="text-xs text-center mt-2 text-gray-500">Senin puanın</p>
-                            )}
-                        </div>
-
-                        <div className="p-4 bg-pink-500/10 rounded-2xl border border-pink-500/20">
-                            <p className="text-sm text-pink-400 mb-2 text-center">💖 Onun Puanı</p>
-                            <div className="flex justify-center gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                        key={star}
-                                        className={`h-6 w-6 ${star <= (movie.theirRating || 0) ? "text-yellow-400 fill-current" : "text-gray-600"
-                                            }`}
-                                    />
-                                ))}
+                            <div>
+                                <p className="font-semibold">İbrahim'in Puanı</p>
+                                <p className="text-sm text-gray-400">💙</p>
                             </div>
-                            {currentUser === "sen" && (
-                                <p className="text-xs text-center mt-2 text-gray-500">Senin puanın</p>
-                            )}
                         </div>
-                    </div>
-
-                    {/* Your Rating */}
-                    <div className="p-4 bg-white/5 rounded-2xl">
-                        <p className="text-sm text-gray-400 mb-3 text-center">
-                            {currentUser === "ben" ? "💙" : "💖"} Puanını Güncelle
-                        </p>
-                        <div className="flex justify-center gap-2">
+                        <div className="flex gap-1">
                             {[1, 2, 3, 4, 5].map((star) => (
-                                <motion.button
+                                <button
                                     key={star}
-                                    whileTap={{ scale: 0.8 }}
-                                    onClick={() => updateRating(star === editRating ? 0 : star)}
+                                    onClick={() => currentUser === "ben" && updateRating(star === editRating ? 0 : star)}
+                                    disabled={currentUser !== "ben"}
+                                    className={`transition-transform ${currentUser === "ben" ? "hover:scale-110 cursor-pointer" : "cursor-default"}`}
                                 >
-                                    <Star
-                                        className={`h-8 w-8 transition-all ${star <= editRating
-                                                ? "text-yellow-400 fill-current drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]"
-                                                : "text-gray-600 hover:text-gray-400"
+                                    <span
+                                        className={`material-icons text-3xl ${star <= (movie.myRating || 0)
+                                                ? "text-yellow-400"
+                                                : "text-gray-600"
                                             }`}
-                                    />
-                                </motion.button>
+                                    >
+                                        {star <= (movie.myRating || 0) ? "star" : "star_border"}
+                                    </span>
+                                </button>
                             ))}
                         </div>
+                        {currentUser === "ben" && (
+                            <p className="text-xs text-blue-400 mt-3">Puanını değiştirmek için yıldızlara tıkla</p>
+                        )}
                     </div>
 
-                    {/* Watch Button */}
-                    {movie.videoUrl ? (
-                        <a href={movie.videoUrl} target="_blank" rel="noopener noreferrer">
-                            <Button className="w-full h-14 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-lg">
-                                <Play className="h-5 w-5 mr-2" /> İzle
-                                <ExternalLink className="h-4 w-4 ml-2" />
-                            </Button>
-                        </a>
-                    ) : (
-                        <Link href={`/movies?title=${encodeURIComponent(movie.title)}`}>
-                            <Button className="w-full h-14 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-lg">
-                                <Play className="h-5 w-5 mr-2" /> Birlikte İzle
-                            </Button>
-                        </Link>
-                    )}
-                </motion.div>
+                    {/* Selina's Rating */}
+                    <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/10 rounded-lg p-6 border border-pink-500/20">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center">
+                                <span className="material-icons-round">favorite</span>
+                            </div>
+                            <div>
+                                <p className="font-semibold">Selina'nın Puanı</p>
+                                <p className="text-sm text-gray-400">💖</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                    key={star}
+                                    onClick={() => currentUser === "sen" && updateRating(star === editRating ? 0 : star)}
+                                    disabled={currentUser !== "sen"}
+                                    className={`transition-transform ${currentUser === "sen" ? "hover:scale-110 cursor-pointer" : "cursor-default"}`}
+                                >
+                                    <span
+                                        className={`material-icons text-3xl ${star <= (movie.theirRating || 0)
+                                                ? "text-yellow-400"
+                                                : "text-gray-600"
+                                            }`}
+                                    >
+                                        {star <= (movie.theirRating || 0) ? "star" : "star_border"}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                        {currentUser === "sen" && (
+                            <p className="text-xs text-pink-400 mt-3">Puanını değiştirmek için yıldızlara tıkla</p>
+                        )}
+                    </div>
+                </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#1a1a1a] rounded-lg p-6 max-w-sm w-full">
+                        <h3 className="text-xl font-bold mb-2">Filmi Sil</h3>
+                        <p className="text-gray-400 mb-6">"{movie.title}" filmini silmek istediğine emin misin?</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="flex-1 py-3 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                            >
+                                İptal
+                            </button>
+                            <button
+                                onClick={deleteMovie}
+                                className="flex-1 py-3 rounded bg-red-600 hover:bg-red-700 transition-colors"
+                            >
+                                Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

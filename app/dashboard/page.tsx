@@ -188,6 +188,42 @@ export default function DashboardPage() {
                     </div>
                 )}
 
+                {/* Continue Watching Section - Always visible if there are watching movies */}
+                {watchingMovies.length > 0 && (
+                    <section className="mb-8">
+                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span className="material-icons-round text-red-500">play_circle</span>
+                            İzlemeye Devam Et
+                        </h3>
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                            {watchingMovies.map((movie) => (
+                                <Link
+                                    key={movie.id}
+                                    href={`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`}
+                                    className="flex-shrink-0 w-64 md:w-80 group"
+                                >
+                                    <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
+                                        <img
+                                            src={movie.poster}
+                                            alt={movie.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        />
+                                        {/* Play overlay */}
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="material-icons-round text-5xl">play_circle</span>
+                                        </div>
+                                        {/* Progress bar simulation */}
+                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
+                                            <div className="h-full bg-red-600 w-1/3" />
+                                        </div>
+                                    </div>
+                                    <p className="mt-2 text-sm font-medium truncate">{movie.title}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {/* Movie Rows */}
                 <section className="mb-8">
                     <h3 className="text-xl md:text-2xl font-semibold mb-4 flex items-center gap-2">
