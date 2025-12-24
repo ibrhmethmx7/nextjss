@@ -250,26 +250,34 @@ function WatchContent() {
         return () => clearInterval(interval);
     }, [isCreator, roomId, sessionId]);
 
-    // Local Player State Polling (for UI) - reduced frequency for performance
+    // Local Player State Polling (for UI) + Save Progress every 5 seconds
+    const lastSaveRef = useRef(0);
     useEffect(() => {
         const interval = setInterval(() => {
-            if (playerRef.current && playerRef.current.getCurrentTime) {
-                const time = playerRef.current.getCurrentTime();
-                const dur = playerRef.current.getDuration();
-                setCurrentTime(time);
-                setDuration(dur);
-                setIsPlaying(playerRef.current.getPlayerState() === 1);
-                setVolume(playerRef.current.getVolume());
-                setIsMuted(playerRef.current.isMuted());
+            if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+                try {
+                    const time = playerRef.current.getCurrentTime();
+                    const dur = playerRef.current.getDuration();
+                    setCurrentTime(time);
+                    setDuration(dur);
+                    setIsPlaying(playerRef.current.getPlayerState() === 1);
+                    setVolume(playerRef.current.getVolume());
+                    setIsMuted(playerRef.current.isMuted());
 
-                // Save progress every 10 seconds for the movie
-                if (movieId && time > 0 && dur > 0) {
-                    const progress = (time / dur) * 100;
-                    update(ref(database, `movies/${movieId}`), {
-                        watchProgress: time,
-                        watchProgressPercent: Math.round(progress),
-                        lastWatched: Date.now()
-                    });
+                    // Save progress every 5 seconds for the movie
+                    const now = Date.now();
+                    if (movieId && time > 0 && dur > 0 && (now - lastSaveRef.current > 5000)) {
+                        lastSaveRef.current = now;
+                        const progress = (time / dur) * 100;
+                        console.log(`Saving progress: ${time.toFixed(0)}s (${progress.toFixed(0)}%) for movie ${movieId}`);
+                        update(ref(database, `movies/${movieId}`), {
+                            watchProgress: Math.floor(time),
+                            watchProgressPercent: Math.round(progress),
+                            lastWatched: now
+                        });
+                    }
+                } catch (e) {
+                    // Player not ready yet
                 }
             }
         }, 1000);
