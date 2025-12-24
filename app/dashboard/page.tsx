@@ -263,10 +263,16 @@ export default function DashboardPage() {
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                             {filteredMovies.map((movie) => (
-                                <Link
+                                <div
                                     key={movie.id}
-                                    href={`/movie/${movie.id}`}
-                                    className="group relative aspect-[2/3] rounded overflow-hidden bg-gray-800"
+                                    onClick={() => {
+                                        if (movie.videoUrl) {
+                                            router.push(`/watch?url=${encodeURIComponent(movie.videoUrl)}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`);
+                                        } else {
+                                            router.push(`/movie/${movie.id}`);
+                                        }
+                                    }}
+                                    className="group relative aspect-[2/3] rounded overflow-hidden bg-gray-800 cursor-pointer"
                                 >
                                     <img
                                         src={movie.poster || `https://picsum.photos/seed/${movie.id}/300/450`}
@@ -274,24 +280,15 @@ export default function DashboardPage() {
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     />
 
-                                    {/* Hover Overlay */}
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                    {/* Play icon overlay */}
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="material-icons-round text-5xl text-white">play_circle</span>
+                                    </div>
+
+                                    {/* Title at bottom */}
+                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
                                         <h4 className="text-sm font-semibold line-clamp-2">{movie.title}</h4>
                                         {movie.year && <p className="text-xs text-gray-400">{movie.year}</p>}
-
-                                        {/* Quick Play Button */}
-                                        {movie.videoUrl && (
-                                            <div
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    router.push(`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`);
-                                                }}
-                                                className="mt-2 flex items-center justify-center gap-1 bg-white text-black text-xs py-1.5 rounded font-medium hover:bg-white/90"
-                                            >
-                                                <span className="material-icons-round text-sm">play_arrow</span>
-                                                İzle
-                                            </div>
-                                        )}
                                     </div>
 
                                     {/* Status Badge */}
@@ -312,7 +309,7 @@ export default function DashboardPage() {
                                             )}
                                         </div>
                                     </div>
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     )}
