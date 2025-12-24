@@ -66,6 +66,8 @@ export default function DashboardPage() {
     const watchingMovies = movies.filter((m) => m.status === "watching");
     const watchlistMovies = movies.filter((m) => m.status === "watchlist");
     const completedMovies = movies.filter((m) => m.status === "completed");
+    // Continue watching: ANY movie with progress (regardless of status)
+    const continueWatchingMovies = movies.filter((m) => m.watchProgress && m.watchProgress > 0).sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0));
 
     const tabs = [
         { id: "watching", label: "Devam Ettiklerimiz", icon: "play_circle", movies: watchingMovies },
@@ -191,15 +193,15 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                {/* Continue Watching Section - Always visible if there are watching movies */}
-                {watchingMovies.length > 0 && (
+                {/* Continue Watching Section - Movies with any progress */}
+                {continueWatchingMovies.length > 0 && (
                     <section className="mb-8">
                         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                             <span className="material-icons-round text-red-500">play_circle</span>
                             İzlemeye Devam Et
                         </h3>
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                            {watchingMovies.filter(m => m.watchProgress && m.watchProgress > 0).sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0)).map((movie) => (
+                            {continueWatchingMovies.map((movie) => (
                                 <Link
                                     key={movie.id}
                                     href={`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}&startTime=${Math.floor(Math.max(0, (movie.watchProgress || 0) - 5))}`}
