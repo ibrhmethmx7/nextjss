@@ -2,13 +2,17 @@
 
 import { useEffect, useState, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Trash2, SkipForward, List, CheckCircle, Search, MessageCircle, Send, Maximize2, Minimize2 } from "lucide-react";
 import Link from "next/link";
 import { database, YOUTUBE_API_KEY } from "@/lib/firebase";
 import SurpriseEffect from "@/components/SurpriseEffect";
+import AmbilightEffect from "@/components/player/AmbilightEffect";
+import MobileSeekOverlay from "@/components/player/MobileSeekOverlay";
+import { ReactionOverlay } from "@/components/player/ReactionSystem";
+import VideoControls from "@/components/player/VideoControls";
 import { ref, update, push, set, onValue, get } from "firebase/database";
 
 type QueueItem = { id: string; title: string; url: string; thumbnail?: string; movieId?: string; };
@@ -63,12 +67,37 @@ function WatchContent() {
     const [userId, setUserId] = useState("");
     const [isCreator, setIsCreator] = useState(false);
     const [sessionId] = useState(Math.random().toString(36).substring(2));
+    const [showChatMessages, setShowChatMessages] = useState(false);
+
+    // Auto-show chat on new message
+    useEffect(() => {
+        if (chatMessages.length > 0) {
+            setShowChatMessages(true);
+            const timer = setTimeout(() => setShowChatMessages(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [chatMessages]);
+
+    // Player State
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [volume, setVolume] = useState(100);
+    const [isMuted, setIsMuted] = useState(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const mobileChatContainerRef = useRef<HTMLDivElement>(null);
+    const fullscreenChatRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<any>(null);
     const isRemoteUpdate = useRef(false);
+
+    // Auto-scroll fullscreen chat
+    useEffect(() => {
+        if (showChatMessages && fullscreenChatRef.current) {
+            fullscreenChatRef.current.scrollTop = fullscreenChatRef.current.scrollHeight;
+        }
+    }, [chatMessages, showChatMessages]);
 
     // Initialize User and Room
     useEffect(() => {
@@ -129,7 +158,11 @@ function WatchContent() {
         const chatRef = ref(database, `rooms/${roomId}/messages`);
         const unsubChat = onValue(chatRef, (snapshot) => {
             const data = snapshot.val();
-            if (data) setChatMessages((Object.values(data) as ChatMessage[]).slice(-50));
+            if (data) {
+                const messages = Object.values(data) as ChatMessage[];
+                console.log("TÜM MESAJLAR:", messages);
+                setChatMessages(messages);
+            }
         });
 
         const queueRef = ref(database, `rooms/${roomId}/queue`);
@@ -176,13 +209,16 @@ function WatchContent() {
             // Sync Play/Pause
             if (data.isPlaying && playerStatus !== 1 && playerStatus !== 3) {
                 player.playVideo();
+                setIsPlaying(true);
             } else if (!data.isPlaying && playerStatus === 1) {
                 player.pauseVideo();
+                setIsPlaying(false);
             }
 
             // Sync Time (if drift > 2 seconds)
             if (Math.abs(currentTime - data.currentTime) > 2) {
                 player.seekTo(data.currentTime, true);
+                setCurrentTime(data.currentTime);
             }
 
             // Reset flag after a short delay to allow events to fire
@@ -202,13 +238,6 @@ function WatchContent() {
                 const currentTime = player.getCurrentTime();
                 const isPlaying = player.getPlayerState() === 1;
 
-                // Only update if playing to avoid spamming paused state? 
-                // Actually periodic update is good for time sync.
-                // But we should be careful not to override remote seeks if we are lagging.
-                // Let's keep it simple: Creator is authority.
-                // But now we allow multi-tab creator.
-                // We should only write if we are NOT processing a remote update.
-
                 update(ref(database, `rooms/${roomId}/playerState`), {
                     currentTime,
                     isPlaying,
@@ -220,6 +249,20 @@ function WatchContent() {
 
         return () => clearInterval(interval);
     }, [isCreator, roomId, sessionId]);
+
+    // Local Player State Polling (for UI)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (playerRef.current && playerRef.current.getCurrentTime) {
+                setCurrentTime(playerRef.current.getCurrentTime());
+                setDuration(playerRef.current.getDuration());
+                setIsPlaying(playerRef.current.getPlayerState() === 1);
+                setVolume(playerRef.current.getVolume());
+                setIsMuted(playerRef.current.isMuted());
+            }
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
 
     // Initialize YouTube Player
     const currentVideo = queue[currentIndex];
@@ -250,10 +293,12 @@ function WatchContent() {
                 playerVars: {
                     'playsinline': 1,
                     'autoplay': 1,
-                    'controls': 1, // Show native controls
-                    'disablekb': 0,
+                    'controls': 0, // Hide native controls
+                    'disablekb': 1, // Disable native keyboard controls
                     'modestbranding': 1,
-                    'rel': 0
+                    'rel': 0,
+                    'showinfo': 0,
+                    'iv_load_policy': 3
                 },
                 events: {
                     'onReady': onPlayerReady,
@@ -271,14 +316,19 @@ function WatchContent() {
     }, [currentVideo]);
 
     const onPlayerReady = (event: any) => {
-        // Player ready
+        setDuration(event.target.getDuration());
+        setVolume(event.target.getVolume());
+        setIsMuted(event.target.isMuted());
     };
 
     const onPlayerStateChange = (event: any) => {
-        if (!isCreator || isRemoteUpdate.current) return;
-
         const player = event.target;
         const isPlaying = event.data === 1;
+        setIsPlaying(isPlaying);
+        setDuration(player.getDuration());
+
+        if (!isCreator || isRemoteUpdate.current) return;
+
         const currentTime = player.getCurrentTime();
 
         update(ref(database, `rooms/${roomId}/playerState`), {
@@ -412,6 +462,109 @@ function WatchContent() {
         setNewMessage("");
     };
 
+    // Control Handlers
+    const handleTogglePlay = () => {
+        if (!playerRef.current) return;
+        if (isPlaying) {
+            playerRef.current.pauseVideo();
+        } else {
+            playerRef.current.playVideo();
+        }
+    };
+
+    const handleSeek = (time: number) => {
+        if (!playerRef.current) return;
+        playerRef.current.seekTo(time, true);
+        setCurrentTime(time);
+    };
+
+    const handleMobileSeek = (seconds: number) => {
+        if (!playerRef.current) return;
+        const newTime = Math.max(0, Math.min(currentTime + seconds, duration));
+        playerRef.current.seekTo(newTime, true);
+        setCurrentTime(newTime);
+    };
+
+    const handleVolumeChange = (vol: number) => {
+        if (!playerRef.current) return;
+        playerRef.current.setVolume(vol);
+        setVolume(vol);
+        if (vol > 0 && isMuted) {
+            playerRef.current.unMute();
+            setIsMuted(false);
+        }
+    };
+
+    const handleToggleMute = () => {
+        if (!playerRef.current) return;
+        if (isMuted) {
+            playerRef.current.mute();
+            setIsMuted(true);
+        } else {
+            playerRef.current.unMute();
+            setIsMuted(false);
+        }
+    };
+
+    const handleSkipForward = () => {
+        if (!playerRef.current) return;
+        const newTime = Math.min(currentTime + 10, duration);
+        playerRef.current.seekTo(newTime, true);
+        setCurrentTime(newTime);
+    };
+
+    const handleSkipBack = () => {
+        if (!playerRef.current) return;
+        const newTime = Math.max(currentTime - 10, 0);
+        playerRef.current.seekTo(newTime, true);
+        setCurrentTime(newTime);
+    };
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if typing in an input or textarea
+            if (["INPUT", "TEXTAREA"].includes((document.activeElement as HTMLElement).tagName)) return;
+
+            switch (e.key.toLowerCase()) {
+                case " ":
+                case "k":
+                    e.preventDefault();
+                    handleTogglePlay();
+                    break;
+                case "arrowleft":
+                case "j":
+                    e.preventDefault();
+                    handleSeek(Math.max(0, currentTime - 10));
+                    break;
+                case "arrowright":
+                case "l":
+                    e.preventDefault();
+                    handleSeek(Math.min(duration, currentTime + 10));
+                    break;
+                case "arrowup":
+                    e.preventDefault();
+                    handleVolumeChange(Math.min(100, volume + 10));
+                    break;
+                case "arrowdown":
+                    e.preventDefault();
+                    handleVolumeChange(Math.max(0, volume - 10));
+                    break;
+                case "m":
+                    e.preventDefault();
+                    handleToggleMute();
+                    break;
+                case "f":
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [currentTime, duration, volume, isPlaying, isMuted]);
+
     // Empty state
     if (queue.length === 0) {
         return (
@@ -464,48 +617,84 @@ function WatchContent() {
 
                 {/* Video Container */}
                 <div className={`relative w-full shrink-0 ${isFullscreen ? 'flex-1 h-full' : ''}`} style={!isFullscreen ? { paddingTop: "56.25%" } : {}}>
+                    {/* Ambilight Effect */}
+                    <AmbilightEffect thumbnailUrl={currentVideo?.thumbnail || getThumbnail(currentVideo?.url || "")} />
+
                     {/* YouTube Player Div */}
-                    <div id="youtube-player" className="absolute inset-0 w-full h-full" />
+                    <div id="youtube-player" className="absolute inset-0 w-full h-full pointer-events-none" />
 
-                    {/* Fullscreen Overlay */}
+                    {/* Mobile Seek Overlay */}
+                    <MobileSeekOverlay onSeek={handleMobileSeek} />
+
+                    {/* Reaction Overlay */}
+                    <ReactionOverlay roomId={roomId} />
+
+                    {/* Click blocker for YouTube iframe (to prevent clicking native controls if they appear) */}
+                    <div className="absolute inset-0 z-0" onClick={handleTogglePlay}></div>
+
+                    {/* Custom Video Controls */}
+                    <VideoControls
+                        roomId={roomId}
+                        isPlaying={isPlaying}
+                        isMuted={isMuted}
+                        isFullscreen={isFullscreen}
+                        currentTime={currentTime}
+                        duration={duration}
+                        volume={volume}
+                        title={currentVideo?.title || ""}
+                        onTogglePlay={handleTogglePlay}
+                        onToggleMute={handleToggleMute}
+                        onToggleFullscreen={toggleFullscreen}
+                        onSeek={handleSeek}
+                        onVolumeChange={handleVolumeChange}
+                        onSkipForward={handleSkipForward}
+                        onSkipBack={handleSkipBack}
+                    />
+
+                    {/* Fullscreen Chat Overlay (Optional - kept from previous version but positioned differently) */}
                     {isFullscreen && (
-                        <>
-                            {/* Floating Chat */}
-                            <div className="absolute right-4 bottom-24 w-80 max-h-64 overflow-hidden pointer-events-none flex flex-col justify-end">
-                                <div className="overflow-y-auto max-h-full space-y-2 p-2">
-                                    {chatMessages.slice(-10).map((msg, i) => (
-                                        <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-sm border border-white/5 shadow-lg">
-                                            <span className={`font-bold ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}: </span>
-                                            <span className="text-white/90">{msg.text}</span>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
+                        <div
+                            className="absolute right-4 bottom-24 md:bottom-32 w-64 md:w-80 max-h-48 md:max-h-64 flex flex-col justify-end z-[60]"
+                            onMouseEnter={() => setShowChatMessages(true)}
+                            onMouseLeave={() => {
+                                if (!newMessage) setTimeout(() => setShowChatMessages(false), 2000);
+                            }}
+                        >
+                            <AnimatePresence>
+                                {showChatMessages && (
+                                    <motion.div
+                                        ref={fullscreenChatRef}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="overflow-y-auto min-h-0 space-y-2 p-2 pointer-events-auto mb-2 scroll-smooth"
+                                    >
+                                        {chatMessages.slice(-4).map((msg, i) => (
+                                            <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-xs md:text-sm border border-white/5 shadow-lg">
+                                                <span className={`font-bold ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}: </span>
+                                                <span className="text-white/90">{msg.text}</span>
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
-                            {/* Controls Overlay */}
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pointer-events-none pt-20 pb-16">
-                                <div className="flex items-center justify-between gap-2 pointer-events-auto max-w-4xl mx-auto w-full">
-                                    <Button size="sm" variant="ghost" onClick={toggleFullscreen} className="hover:bg-white/10"><Minimize2 className="h-5 w-5" /></Button>
-                                    <div className="flex gap-2 flex-1 max-w-xl">
-                                        <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-black/50 border-white/20 h-10 backdrop-blur-md" style={{ fontSize: '16px' }} />
-                                        <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10 px-4"><Send className="h-4 w-4" /></Button>
-                                    </div>
-                                    {isCreator && (
-                                        <div className="flex gap-2">
-                                            <span className="text-xs text-white/50 self-center">{currentIndex + 1}/{queue.length}</span>
-                                            {currentIndex < queue.length - 1 && <Button size="sm" onClick={playNext} className="bg-red-600 h-10"><SkipForward className="h-4 w-4" /></Button>}
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="p-2 pointer-events-auto flex gap-2 items-center transition-opacity duration-300 opacity-50 hover:opacity-100 focus-within:opacity-100">
+                                <Input
+                                    value={newMessage}
+                                    onChange={(e) => {
+                                        setNewMessage(e.target.value);
+                                        setShowChatMessages(true);
+                                    }}
+                                    onFocus={() => setShowChatMessages(true)}
+                                    onBlur={() => setTimeout(() => setShowChatMessages(false), 2000)}
+                                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                                    placeholder="Mesaj yaz..."
+                                    className="bg-transparent border-none shadow-none h-8 text-xs md:text-sm text-white/70 placeholder:text-white/30 focus:bg-black/40 focus:text-white focus:placeholder:text-white/70 transition-all duration-300"
+                                />
+                                <Button size="sm" onClick={sendMessage} className="bg-transparent hover:bg-white/10 text-white/50 hover:text-white h-8 w-8 p-0 transition-colors"><Send className="h-4 w-4" /></Button>
                             </div>
-                        </>
-                    )}
-
-                    {/* Normal Mode Maximize Button */}
-                    {!isFullscreen && (
-                        <button onClick={toggleFullscreen} className="absolute top-2 right-2 p-2 bg-black/60 rounded-lg hover:bg-black/80 z-10 text-white/80 hover:text-white transition-colors">
-                            <Maximize2 className="h-5 w-5" />
-                        </button>
+                        </div>
                     )}
                 </div>
 
@@ -552,11 +741,11 @@ function WatchContent() {
                                     )}
                                     <div className="flex-1 overflow-y-auto p-2 space-y-1">
                                         {queue.map((item, i) => (
-                                            <div key={item.id} onClick={() => isCreator && setIndex(i)} className={`p-2 rounded flex items-center gap-2 ${i === currentIndex ? "bg-red-600/30" : "bg-white/5"} ${isCreator ? "cursor-pointer" : ""}`}>
-                                                <span className="text-xs w-4">{i + 1}</span>
-                                                {item.thumbnail && <img src={item.thumbnail} className="w-10 h-6 rounded" />}
-                                                <span className="flex-1 text-xs truncate">{item.title}</span>
-                                                {isCreator && i !== currentIndex && <button onClick={(e) => { e.stopPropagation(); removeFromQueue(i); }}><Trash2 className="h-3 w-3 text-gray-500" /></button>}
+                                            <div key={item.id} onClick={() => isCreator && setIndex(i)} className={`p-2 rounded-lg flex items-center gap-2 ${i === currentIndex ? "bg-red-600/30 border border-red-500/30" : "bg-white/5 hover:bg-white/10"} ${isCreator ? "cursor-pointer" : ""}`}>
+                                                <span className="text-xs w-5 text-gray-500">{i + 1}</span>
+                                                {item.thumbnail && <img src={item.thumbnail} className="w-14 h-8 rounded object-cover" />}
+                                                <span className="flex-1 text-sm truncate">{item.title}</span>
+                                                {isCreator && i !== currentIndex && <button onClick={(e) => { e.stopPropagation(); removeFromQueue(i); }}><Trash2 className="h-4 w-4 text-gray-500 hover:text-red-400" /></button>}
                                             </div>
                                         ))}
                                     </div>

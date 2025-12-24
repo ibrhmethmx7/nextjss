@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Great_Vibes } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import AuroraBackground from "@/components/ui/AuroraBackground";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,12 +30,15 @@ export default function RootLayout({
       <body
         suppressHydrationWarning
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen bg-background font-sans antialiased selection:bg-primary/30 selection:text-primary-foreground",
           inter.variable,
           greatVibes.variable
         )}
       >
-        {children}
+        <AuroraBackground />
+        <main className="relative z-10">
+          {children}
+        </main>
       </body>
     </html>
   );

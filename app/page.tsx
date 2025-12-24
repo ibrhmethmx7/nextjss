@@ -1,123 +1,120 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Film, Heart, Lock, User } from "lucide-react";
+import { Heart, Film, Gamepad2, Map, Calendar, Music } from "lucide-react";
 
-const users = [
-  { id: "ben", name: "Ben", color: "from-blue-500 to-blue-700" },
-  { id: "sen", name: "Sen", color: "from-pink-500 to-pink-700" },
+const features = [
+  {
+    icon: Film,
+    title: "Sinema Odası",
+    desc: "Birlikte film izleyelim",
+    href: "/watch",
+    color: "text-pink-400",
+    delay: 0.1
+  },
+  {
+    icon: Gamepad2,
+    title: "Oyun Alanı",
+    desc: "Eğlenceli mini oyunlar",
+    href: "/games",
+    color: "text-purple-400",
+    delay: 0.2
+  },
+  {
+    icon: Map,
+    title: "Anı Haritası",
+    desc: "Gezdiğimiz yerler",
+    href: "/map",
+    color: "text-blue-400",
+    delay: 0.3
+  },
+  {
+    icon: Calendar,
+    title: "Takvim",
+    desc: "Özel günlerimiz",
+    href: "/calendar",
+    color: "text-teal-400",
+    delay: 0.4
+  },
+  {
+    icon: Music,
+    title: "Müzik Kutusu",
+    desc: "Bizim şarkılarımız",
+    href: "/music",
+    color: "text-yellow-400",
+    delay: 0.5
+  },
+  {
+    icon: Heart,
+    title: "Sürpriz",
+    desc: "Sana özel bir not",
+    href: "/surprise",
+    color: "text-red-500",
+    delay: 0.6
+  }
 ];
 
-export default function LoginPage() {
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const user = users.find((u) => u.id === selectedUser);
-
-    if (user && password === "1234") {
-      localStorage.setItem("cinema_user", user.id);
-      localStorage.setItem("cinema_user_name", user.name);
-      window.location.href = "/dashboard";
-    } else {
-      setError("Şifre yanlış");
-    }
-  };
-
-  useEffect(() => {
-    if (localStorage.getItem("cinema_user")) {
-      window.location.href = "/dashboard";
-    }
-  }, []);
-
+export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] via-[#1a0a1a] to-[#0a0a0a] text-white p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+
+      {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm space-y-8"
+        transition={{ duration: 0.8 }}
+        className="text-center mb-16 relative z-10"
       >
-        {/* Logo */}
-        <div className="text-center space-y-4">
-          <motion.div
-            className="relative inline-block"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Film className="w-20 h-20 text-red-500 mx-auto" />
-            <Heart className="w-8 h-8 text-pink-500 fill-current absolute -top-1 -right-1 animate-pulse" />
-          </motion.div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
-            Bizim Sinemamız
-          </h1>
-          <p className="text-gray-400">Sadece biz için</p>
-        </div>
-
-        {/* User Selection */}
-        {!selectedUser ? (
-          <div className="space-y-4">
-            <p className="text-center text-gray-400 text-sm">Kim giriş yapıyor?</p>
-            <div className="grid grid-cols-2 gap-4">
-              {users.map((user) => (
-                <motion.button
-                  key={user.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedUser(user.id)}
-                  className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/30 transition-all text-center"
-                >
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${user.color} mx-auto mb-3 flex items-center justify-center`}>
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="font-medium">{user.name}</span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="text-center mb-4">
-              <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${users.find(u => u.id === selectedUser)?.color} mx-auto mb-2 flex items-center justify-center`}>
-                <User className="w-8 h-8 text-white" />
-              </div>
-              <p className="text-sm text-gray-400">Merhaba {users.find(u => u.id === selectedUser)?.name}!</p>
-            </div>
-
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-              <Input
-                type="password"
-                placeholder="Şifre"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 bg-white/5 border-white/10 text-white text-center text-lg h-12"
-                autoFocus
-              />
-            </div>
-
-            {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            )}
-
-            <Button type="submit" className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-lg h-12">
-              Giriş Yap
-            </Button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedUser(null)}
-              className="w-full text-sm text-gray-500 hover:text-white transition-colors"
-            >
-              Geri dön
-            </button>
-          </form>
-        )}
+        <h1 className="font-romantic text-6xl md:text-8xl text-gradient mb-4 drop-shadow-lg">
+          Bizim Dünyamız
+        </h1>
+        <p className="text-muted-foreground text-lg md:text-xl max-w-md mx-auto font-light tracking-wide">
+          Seninle geçen her an, sonsuz bir masalın en güzel sayfası...
+        </p>
       </motion.div>
+
+      {/* Grid Menu */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full z-10">
+        {features.map((item, index) => (
+          <Link href={item.href} key={index} className="block group">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: item.delay, duration: 0.5 }}
+              className="glass glass-hover p-6 rounded-3xl h-full flex flex-col items-center text-center relative overflow-hidden"
+            >
+              {/* Hover Glow Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className={`p-4 rounded-2xl bg-white/5 mb-4 group-hover:scale-110 transition-transform duration-300 ${item.color}`}>
+                <item.icon className="w-8 h-8" />
+              </div>
+
+              <h3 className="text-xl font-semibold mb-2 text-white/90 group-hover:text-white transition-colors">
+                {item.title}
+              </h3>
+
+              <p className="text-sm text-white/50 group-hover:text-white/70 transition-colors">
+                {item.desc}
+              </p>
+            </motion.div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Footer Quote */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 1 }}
+        className="mt-16 text-center z-10"
+      >
+        <p className="font-romantic text-2xl text-white/30">
+          "Seni seviyorum, her şeyden çok..."
+        </p>
+      </motion.div>
+
     </div>
   );
 }
