@@ -353,15 +353,21 @@ function WatchContent() {
         }
     };
 
+
     const onPlayerStateChange = (event: any) => {
         const player = event.target;
         const isPlaying = event.data === 1;
         setIsPlaying(isPlaying);
-        setDuration(player.getDuration());
+
+        // Safely get duration
+        if (typeof player.getDuration === 'function') {
+            setDuration(player.getDuration());
+        }
 
         if (!isCreator || isRemoteUpdate.current) return;
 
-        const currentTime = player.getCurrentTime();
+        // Safely get current time
+        const currentTime = typeof player.getCurrentTime === 'function' ? player.getCurrentTime() : 0;
 
         update(ref(database, `rooms/${roomId}/playerState`), {
             isPlaying,
