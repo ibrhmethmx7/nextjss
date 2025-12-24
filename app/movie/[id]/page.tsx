@@ -151,8 +151,8 @@ export default function MovieDetailPage() {
                             key={s.id}
                             onClick={() => updateStatus(s.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${movie.status === s.id
-                                    ? "bg-white text-black"
-                                    : "bg-white/10 text-white hover:bg-white/20"
+                                ? "bg-white text-black"
+                                : "bg-white/10 text-white hover:bg-white/20"
                                 }`}
                         >
                             <span className="material-icons-round text-lg">{s.icon}</span>
@@ -161,76 +161,54 @@ export default function MovieDetailPage() {
                     ))}
                 </div>
 
-                {/* Ratings Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Ratings Section - Netflix Style */}
+                <div className="flex flex-wrap gap-6">
                     {/* İbrahim's Rating */}
-                    <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 rounded-lg p-6 border border-blue-500/20">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                                <span className="material-icons-round">person</span>
-                            </div>
-                            <div>
-                                <p className="font-semibold">İbrahim'in Puanı</p>
-                                <p className="text-sm text-gray-400">💙</p>
-                            </div>
+                    <div className="flex items-center gap-4 bg-white/5 rounded-lg px-5 py-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center">
+                            <span className="text-2xl">💙</span>
                         </div>
-                        <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    onClick={() => currentUser === "ben" && updateRating(star === editRating ? 0 : star)}
-                                    disabled={currentUser !== "ben"}
-                                    className={`transition-transform ${currentUser === "ben" ? "hover:scale-110 cursor-pointer" : "cursor-default"}`}
-                                >
-                                    <span
-                                        className={`material-icons text-3xl ${star <= (movie.myRating || 0)
-                                                ? "text-yellow-400"
-                                                : "text-gray-600"
-                                            }`}
+                        <div>
+                            <p className="text-sm text-gray-400">İbrahim</p>
+                            <div className="flex gap-0.5 mt-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => currentUser === "ben" && updateRating(star === editRating ? 0 : star)}
+                                        disabled={currentUser !== "ben"}
+                                        className={`${currentUser === "ben" ? "hover:scale-125 cursor-pointer" : "cursor-default"} transition-transform`}
                                     >
-                                        {star <= (movie.myRating || 0) ? "star" : "star_border"}
-                                    </span>
-                                </button>
-                            ))}
+                                        <span className={`material-icons text-xl ${star <= (movie.myRating || 0) ? "text-yellow-400" : "text-gray-600"}`}>
+                                            {star <= (movie.myRating || 0) ? "star" : "star_border"}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        {currentUser === "ben" && (
-                            <p className="text-xs text-blue-400 mt-3">Puanını değiştirmek için yıldızlara tıkla</p>
-                        )}
                     </div>
 
                     {/* Selina's Rating */}
-                    <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/10 rounded-lg p-6 border border-pink-500/20">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center">
-                                <span className="material-icons-round">favorite</span>
-                            </div>
-                            <div>
-                                <p className="font-semibold">Selina'nın Puanı</p>
-                                <p className="text-sm text-gray-400">💖</p>
-                            </div>
+                    <div className="flex items-center gap-4 bg-white/5 rounded-lg px-5 py-4">
+                        <div className="w-12 h-12 rounded-full bg-pink-600/20 flex items-center justify-center">
+                            <span className="text-2xl">💖</span>
                         </div>
-                        <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    onClick={() => currentUser === "sen" && updateRating(star === editRating ? 0 : star)}
-                                    disabled={currentUser !== "sen"}
-                                    className={`transition-transform ${currentUser === "sen" ? "hover:scale-110 cursor-pointer" : "cursor-default"}`}
-                                >
-                                    <span
-                                        className={`material-icons text-3xl ${star <= (movie.theirRating || 0)
-                                                ? "text-yellow-400"
-                                                : "text-gray-600"
-                                            }`}
+                        <div>
+                            <p className="text-sm text-gray-400">Selina</p>
+                            <div className="flex gap-0.5 mt-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => currentUser === "sen" && updateRating(star === editRating ? 0 : star)}
+                                        disabled={currentUser !== "sen"}
+                                        className={`${currentUser === "sen" ? "hover:scale-125 cursor-pointer" : "cursor-default"} transition-transform`}
                                     >
-                                        {star <= (movie.theirRating || 0) ? "star" : "star_border"}
-                                    </span>
-                                </button>
-                            ))}
+                                        <span className={`material-icons text-xl ${star <= (movie.theirRating || 0) ? "text-yellow-400" : "text-gray-600"}`}>
+                                            {star <= (movie.theirRating || 0) ? "star" : "star_border"}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        {currentUser === "sen" && (
-                            <p className="text-xs text-pink-400 mt-3">Puanını değiştirmek için yıldızlara tıkla</p>
-                        )}
                     </div>
                 </div>
             </div>

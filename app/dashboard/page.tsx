@@ -23,7 +23,7 @@ type Movie = {
 
 export default function DashboardPage() {
     const [movies, setMovies] = useState<Movie[]>([]);
-    const [activeTab, setActiveTab] = useState<"watching" | "watchlist" | "completed">("watching");
+    const [activeTab, setActiveTab] = useState<"watchlist" | "completed">("watchlist");
     const [currentUser, setCurrentUser] = useState<string>("");
     const [userName, setUserName] = useState<string>("");
     const [searchOpen, setSearchOpen] = useState(false);
@@ -72,8 +72,7 @@ export default function DashboardPage() {
         .sort((a, b) => (b.lastWatched || b.addedAt || 0) - (a.lastWatched || a.addedAt || 0));
 
     const tabs = [
-        { id: "watching", label: "Devam Ettiklerimiz", icon: "play_circle", movies: watchingMovies },
-        { id: "watchlist", label: "İzleyeceğiz", icon: "bookmark", movies: watchlistMovies },
+        { id: "watchlist", label: "İzleme Listemiz", icon: "bookmark", movies: watchlistMovies },
         { id: "completed", label: "Bitirdiklerimiz", icon: "check_circle", movies: completedMovies },
     ];
 
@@ -162,38 +161,6 @@ export default function DashboardPage() {
 
             {/* Main Content */}
             <main className="pt-28 md:pt-20 pb-20 px-4 md:px-12">
-                {/* Hero Banner - Featured Movie */}
-                {watchingMovies.length > 0 && activeTab === "watching" && (
-                    <div className="relative h-[50vh] md:h-[70vh] mb-8 rounded-lg overflow-hidden">
-                        <img
-                            src={watchingMovies[0].poster || `https://picsum.photos/seed/${watchingMovies[0].id}/1920/1080`}
-                            alt={watchingMovies[0].title}
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-transparent to-transparent" />
-
-                        <div className="absolute bottom-8 left-0 right-0 px-8">
-                            <h2 className="text-3xl md:text-5xl font-bold mb-4">{watchingMovies[0].title}</h2>
-                            <div className="flex gap-3">
-                                <Link
-                                    href={`/watch?url=${encodeURIComponent(watchingMovies[0].videoUrl || "")}&title=${encodeURIComponent(watchingMovies[0].title)}&movieId=${watchingMovies[0].id}`}
-                                    className="flex items-center gap-2 bg-white text-black px-6 py-2 rounded font-semibold hover:bg-white/90 transition-colors"
-                                >
-                                    <span className="material-icons-round">play_arrow</span>
-                                    Oynat
-                                </Link>
-                                <Link
-                                    href={`/movie/${watchingMovies[0].id}`}
-                                    className="flex items-center gap-2 bg-gray-500/70 text-white px-6 py-2 rounded font-semibold hover:bg-gray-500/50 transition-colors"
-                                >
-                                    <span className="material-icons-outlined">info</span>
-                                    Detaylar
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Continue Watching Section - Movies with any progress */}
                 {continueWatchingMovies.length > 0 && (
@@ -318,11 +285,8 @@ export default function DashboardPage() {
                 </section>
 
                 {/* Other Sections (if not actively viewing that tab) */}
-                {activeTab !== "watching" && watchingMovies.length > 0 && (
-                    <MovieRow title="Devam Ettiklerimiz" icon="play_circle" movies={watchingMovies} router={router} />
-                )}
                 {activeTab !== "watchlist" && watchlistMovies.length > 0 && (
-                    <MovieRow title="İzleyeceğiz" icon="bookmark" movies={watchlistMovies} router={router} />
+                    <MovieRow title="İzleme Listemiz" icon="bookmark" movies={watchlistMovies} router={router} />
                 )}
                 {activeTab !== "completed" && completedMovies.length > 0 && (
                     <MovieRow title="Bitirdiklerimiz" icon="check_circle" movies={completedMovies} router={router} />
