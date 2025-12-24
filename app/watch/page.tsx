@@ -504,30 +504,30 @@ function WatchContent() {
     const handleTogglePlay = () => {
         if (!playerRef.current) return;
         if (isPlaying) {
-            playerRef.current.pauseVideo();
+            if (typeof playerRef.current.pauseVideo === 'function') playerRef.current.pauseVideo();
         } else {
-            playerRef.current.playVideo();
+            if (typeof playerRef.current.playVideo === 'function') playerRef.current.playVideo();
         }
     };
 
     const handleSeek = (time: number) => {
-        if (!playerRef.current) return;
+        if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
         playerRef.current.seekTo(time, true);
         setCurrentTime(time);
     };
 
     const handleMobileSeek = (seconds: number) => {
-        if (!playerRef.current) return;
+        if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
         const newTime = Math.max(0, Math.min(currentTime + seconds, duration));
         playerRef.current.seekTo(newTime, true);
         setCurrentTime(newTime);
     };
 
     const handleVolumeChange = (vol: number) => {
-        if (!playerRef.current) return;
+        if (!playerRef.current || typeof playerRef.current.setVolume !== 'function') return;
         playerRef.current.setVolume(vol);
         setVolume(vol);
-        if (vol > 0 && isMuted) {
+        if (vol > 0 && isMuted && typeof playerRef.current.unMute === 'function') {
             playerRef.current.unMute();
             setIsMuted(false);
         }
@@ -536,23 +536,23 @@ function WatchContent() {
     const handleToggleMute = () => {
         if (!playerRef.current) return;
         if (isMuted) {
-            playerRef.current.mute();
+            if (typeof playerRef.current.mute === 'function') playerRef.current.mute();
             setIsMuted(true);
         } else {
-            playerRef.current.unMute();
+            if (typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
             setIsMuted(false);
         }
     };
 
     const handleSkipForward = () => {
-        if (!playerRef.current) return;
+        if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
         const newTime = Math.min(currentTime + 10, duration);
         playerRef.current.seekTo(newTime, true);
         setCurrentTime(newTime);
     };
 
     const handleSkipBack = () => {
-        if (!playerRef.current) return;
+        if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
         const newTime = Math.max(currentTime - 10, 0);
         playerRef.current.seekTo(newTime, true);
         setCurrentTime(newTime);
