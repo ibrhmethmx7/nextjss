@@ -327,9 +327,10 @@ function WatchContent() {
     }, [currentVideo]);
 
     const onPlayerReady = async (event: any) => {
-        setDuration(event.target.getDuration());
-        setVolume(event.target.getVolume());
-        setIsMuted(event.target.isMuted());
+        const player = event.target;
+        setDuration(player.getDuration());
+        setVolume(player.getVolume());
+        setIsMuted(player.isMuted());
 
         // Resume from saved progress if available
         if (movieId) {
@@ -340,7 +341,11 @@ function WatchContent() {
                 if (data?.watchProgress && data.watchProgress > 10) {
                     // Seek to saved position (minus 5 seconds for context)
                     const resumeTime = Math.max(0, data.watchProgress - 5);
-                    event.target.seekTo(resumeTime, true);
+                    // Wait for video to fully load before seeking
+                    setTimeout(() => {
+                        player.seekTo(resumeTime, true);
+                        player.playVideo();
+                    }, 1500);
                 }
             } catch (e) {
                 console.error("Error loading watch progress:", e);
