@@ -116,7 +116,8 @@ function WatchContent() {
         setRoomId(room);
 
         if (!searchParams.get("room")) {
-            window.history.replaceState({}, "", `${window.location.pathname}?room=${room}${initialUrl ? `&url=${encodeURIComponent(initialUrl)}` : ""}`);
+            const movieIdParam = movieId ? `&movieId=${movieId}` : "";
+            window.history.replaceState({}, "", `${window.location.pathname}?room=${room}${initialUrl ? `&url=${encodeURIComponent(initialUrl)}` : ""}${movieIdParam}`);
         }
 
         const checkCreator = async () => {
