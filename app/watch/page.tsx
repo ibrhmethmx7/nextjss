@@ -650,48 +650,47 @@ function WatchContent() {
                         onSkipBack={handleSkipBack}
                     />
 
-                    {/* Fullscreen Chat Overlay (Optional - kept from previous version but positioned differently) */}
+                    {/* Fullscreen Chat Overlay */}
                     {isFullscreen && (
-                        <div
-                            className="absolute right-4 bottom-24 md:bottom-32 w-64 md:w-80 max-h-48 md:max-h-64 flex flex-col justify-end z-[60]"
-                            onMouseEnter={() => setShowChatMessages(true)}
-                            onMouseLeave={() => {
-                                if (!newMessage) setTimeout(() => setShowChatMessages(false), 2000);
-                            }}
-                        >
-                            <AnimatePresence>
-                                {showChatMessages && (
-                                    <motion.div
-                                        ref={fullscreenChatRef}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="overflow-y-auto min-h-0 space-y-2 p-2 pointer-events-auto mb-2 scroll-smooth"
-                                    >
-                                        {chatMessages.slice(-4).map((msg, i) => (
-                                            <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-xs md:text-sm border border-white/5 shadow-lg">
-                                                <span className={`font-bold ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}: </span>
-                                                <span className="text-white/90">{msg.text}</span>
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                        <div className="absolute left-0 right-0 bottom-20 px-4 z-[60] pointer-events-none">
+                            {/* Chat Messages - Always visible in fullscreen */}
+                            <div className="max-w-md ml-auto pointer-events-auto">
+                                {/* Messages */}
+                                <div
+                                    ref={fullscreenChatRef}
+                                    className="max-h-32 overflow-y-auto space-y-1 mb-2 scroll-smooth"
+                                >
+                                    {chatMessages.slice(-5).map((msg, i) => (
+                                        <div
+                                            key={i}
+                                            className="bg-black/70 backdrop-blur-sm rounded-lg px-3 py-1.5 text-sm"
+                                        >
+                                            <span className={`font-semibold ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>
+                                                {msg.user}:
+                                            </span>{" "}
+                                            <span className="text-white/90">{msg.text}</span>
+                                        </div>
+                                    ))}
+                                </div>
 
-                            <div className="p-2 pointer-events-auto flex gap-2 items-center transition-opacity duration-300 opacity-50 hover:opacity-100 focus-within:opacity-100">
-                                <Input
-                                    value={newMessage}
-                                    onChange={(e) => {
-                                        setNewMessage(e.target.value);
-                                        setShowChatMessages(true);
-                                    }}
-                                    onFocus={() => setShowChatMessages(true)}
-                                    onBlur={() => setTimeout(() => setShowChatMessages(false), 2000)}
-                                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                                    placeholder="Mesaj yaz..."
-                                    className="bg-transparent border-none shadow-none h-8 text-xs md:text-sm text-white/70 placeholder:text-white/30 focus:bg-black/40 focus:text-white focus:placeholder:text-white/70 transition-all duration-300"
-                                />
-                                <Button size="sm" onClick={sendMessage} className="bg-transparent hover:bg-white/10 text-white/50 hover:text-white h-8 w-8 p-0 transition-colors"><Send className="h-4 w-4" /></Button>
+                                {/* Input */}
+                                <div className="flex gap-2 bg-black/50 backdrop-blur-sm rounded-lg p-2">
+                                    <Input
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                                        placeholder="Mesaj yaz..."
+                                        className="bg-transparent border-none h-9 text-sm text-white placeholder:text-white/50 focus-visible:ring-0"
+                                        style={{ fontSize: '16px' }}
+                                    />
+                                    <Button
+                                        size="sm"
+                                        onClick={sendMessage}
+                                        className="bg-red-600 hover:bg-red-700 h-9 px-3"
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     )}
