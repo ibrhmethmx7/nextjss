@@ -228,7 +228,7 @@ export default function DashboardPage() {
                             </Link>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                             {filteredMovies.map((movie) => (
                                 <div
                                     key={movie.id}
@@ -240,44 +240,32 @@ export default function DashboardPage() {
                                             router.push(`/movie/${movie.id}`);
                                         }
                                     }}
-                                    className="group relative aspect-[2/3] rounded overflow-hidden bg-gray-800 cursor-pointer"
+                                    className="flex-shrink-0 w-64 md:w-80 group cursor-pointer"
                                 >
-                                    <img
-                                        src={movie.poster || `https://picsum.photos/seed/${movie.id}/400/600`}
-                                        alt={movie.title}
-                                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                                        loading="lazy"
-                                    />
-
-                                    {/* Play icon overlay */}
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="material-icons-round text-5xl text-white">play_circle</span>
-                                    </div>
-
-                                    {/* Title at bottom */}
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                                        <h4 className="text-sm font-semibold line-clamp-2">{movie.title}</h4>
-                                        {movie.year && <p className="text-xs text-gray-400">{movie.year}</p>}
-                                    </div>
-
-                                    {/* Status Badge */}
-                                    {movie.status === "watching" && (
-                                        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
-                                            <span className="material-icons-round text-xs">play_arrow</span>
+                                    <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
+                                        <img
+                                            src={movie.poster || `https://picsum.photos/seed/${movie.id}/640/360`}
+                                            alt={movie.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            loading="lazy"
+                                        />
+                                        {/* Play overlay */}
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="material-icons-round text-5xl text-white">play_circle</span>
                                         </div>
-                                    )}
-
-                                    {/* Ratings */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent opacity-100 group-hover:opacity-0 transition-opacity">
-                                        <div className="flex gap-1">
-                                            {movie.myRating && (
-                                                <span className="text-xs bg-blue-500/80 px-1.5 py-0.5 rounded">💙{movie.myRating}</span>
-                                            )}
-                                            {movie.theirRating && (
-                                                <span className="text-xs bg-pink-500/80 px-1.5 py-0.5 rounded">💖{movie.theirRating}</span>
-                                            )}
+                                        {/* Ratings at bottom */}
+                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
+                                            <div className="flex gap-2">
+                                                {movie.myRating && (
+                                                    <span className="text-xs bg-blue-500/80 px-1.5 py-0.5 rounded">💙{movie.myRating}</span>
+                                                )}
+                                                {movie.theirRating && (
+                                                    <span className="text-xs bg-pink-500/80 px-1.5 py-0.5 rounded">💖{movie.theirRating}</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+                                    <p className="mt-2 text-sm font-medium truncate">{movie.title}</p>
                                 </div>
                             ))}
                         </div>
