@@ -49,6 +49,7 @@ function WatchContent() {
     const initialUrl = searchParams.get("url") || "";
     const initialTitle = searchParams.get("title") || "";
     const movieId = searchParams.get("movieId") || "";
+    const startTime = parseInt(searchParams.get("startTime") || "0", 10);
 
     const [queue, setQueue] = useState<QueueItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -326,30 +327,18 @@ function WatchContent() {
 
     }, [currentVideo]);
 
-    const onPlayerReady = async (event: any) => {
+    const onPlayerReady = (event: any) => {
         const player = event.target;
         setDuration(player.getDuration());
         setVolume(player.getVolume());
         setIsMuted(player.isMuted());
 
-        // Resume from saved progress if available
-        if (movieId) {
-            try {
-                const movieRef = ref(database, `movies/${movieId}`);
-                const snapshot = await get(movieRef);
-                const data = snapshot.val();
-                if (data?.watchProgress && data.watchProgress > 10) {
-                    // Seek to saved position (minus 5 seconds for context)
-                    const resumeTime = Math.max(0, data.watchProgress - 5);
-                    // Wait for video to fully load before seeking
-                    setTimeout(() => {
-                        player.seekTo(resumeTime, true);
-                        player.playVideo();
-                    }, 1500);
-                }
-            } catch (e) {
-                console.error("Error loading watch progress:", e);
-            }
+        // Resume from URL startTime parameter (most reliable)
+        if (startTime > 0) {
+            setTimeout(() => {
+                player.seekTo(startTime, true);
+                player.playVideo();
+            }, 1000);
         }
     };
 

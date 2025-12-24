@@ -199,10 +199,10 @@ export default function DashboardPage() {
                             İzlemeye Devam Et
                         </h3>
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                            {watchingMovies.map((movie) => (
+                            {watchingMovies.filter(m => m.watchProgress && m.watchProgress > 10).sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0)).map((movie) => (
                                 <Link
                                     key={movie.id}
-                                    href={`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`}
+                                    href={`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}&startTime=${Math.floor(Math.max(0, (movie.watchProgress || 0) - 5))}`}
                                     className="flex-shrink-0 w-64 md:w-80 group"
                                 >
                                     <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
@@ -215,12 +215,18 @@ export default function DashboardPage() {
                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <span className="material-icons-round text-5xl">play_circle</span>
                                         </div>
-                                        {/* Progress bar - real progress */}
-                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                                            <div
-                                                className="h-full bg-red-600 transition-all"
-                                                style={{ width: `${movie.watchProgressPercent || 0}%` }}
-                                            />
+                                        {/* Progress info */}
+                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
+                                            <div className="flex items-center justify-between text-xs text-gray-300 mb-1">
+                                                <span>{Math.floor((movie.watchProgress || 0) / 60)}:{String(Math.floor((movie.watchProgress || 0) % 60)).padStart(2, '0')}</span>
+                                                <span>%{movie.watchProgressPercent || 0}</span>
+                                            </div>
+                                            <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-red-600"
+                                                    style={{ width: `${movie.watchProgressPercent || 0}%` }}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <p className="mt-2 text-sm font-medium truncate">{movie.title}</p>
