@@ -591,7 +591,7 @@ function WatchContent() {
     }
 
     return (
-        <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'h-screen bg-[#0a0a0a] overflow-hidden'} text-white flex flex-col lg:flex-row transition-all duration-300`}>
+        <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'h-screen bg-[#0a0a0a] overflow-hidden'} text-white flex flex-col xl:flex-row transition-all duration-300`}>
 
             {/* Main Content */}
             <div className={`flex-1 flex flex-col min-w-0 ${isFullscreen ? 'h-full' : 'h-full'}`}>
@@ -607,7 +607,7 @@ function WatchContent() {
                             </Button>
                         </div>
                         <span className="text-sm truncate flex-1 text-center px-2">{currentVideo?.title}</span>
-                        <div className="flex gap-1 lg:hidden">
+                        <div className="flex gap-1 xl:hidden">
                             <Button variant="ghost" size="sm" onClick={() => setActivePanel("chat")} className={activePanel === "chat" ? "bg-white/10" : ""}><MessageCircle className="h-4 w-4" /></Button>
                             <Button variant="ghost" size="sm" onClick={() => setActivePanel("queue")} className={activePanel === "queue" ? "bg-white/10" : ""}><List className="h-4 w-4" /></Button>
                         </div>
@@ -711,7 +711,7 @@ function WatchContent() {
                         </div>
 
                         {/* Mobile Panel */}
-                        <div className="lg:hidden flex-1 border-t border-white/5 bg-black/50 flex flex-col" style={{ minHeight: 250 }}>
+                        <div className="xl:hidden flex-1 border-t border-white/5 bg-black/50 flex flex-col" style={{ minHeight: 250 }}>
                             <div className="flex border-b border-white/5 shrink-0">
                                 <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                                 <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
@@ -757,7 +757,7 @@ function WatchContent() {
 
             {/* Desktop Side Panel (Twitch style) - Hidden in Fullscreen */}
             {!isFullscreen && (
-                <div className="hidden lg:flex flex-col w-80 border-l border-white/5 bg-black/30 h-full">
+                <div className="hidden xl:flex flex-col w-80 border-l border-white/5 bg-black/30 h-full">
                     <div className="flex border-b border-white/5 shrink-0">
                         <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                         <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
