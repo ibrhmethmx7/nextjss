@@ -6,7 +6,7 @@ import {
     Play, Pause, Maximize2, Minimize2, Volume2, VolumeX,
     SkipBack, SkipForward
 } from "lucide-react";
-import { ReactionButton } from "./ReactionSystem";
+import { ReactionButton, QuickTextButton, QUICK_TEXTS } from "./ReactionSystem";
 
 interface VideoControlsProps {
     roomId: string;
@@ -207,6 +207,18 @@ const VideoControls = memo(function VideoControls({
                                     <ReactionButton roomId={roomId} type="smile" />
                                     <ReactionButton roomId={roomId} type="like" />
                                     <ReactionButton roomId={roomId} type="party" />
+                                </div>
+
+                                {/* Quick Text Reactions */}
+                                <div className="hidden md:flex items-center gap-1">
+                                    {QUICK_TEXTS.map((item) => (
+                                        <QuickTextButton
+                                            key={item.text}
+                                            roomId={roomId}
+                                            text={item.text}
+                                            bg={item.bg}
+                                        />
+                                    ))}
                                 </div>
 
                                 {/* Fullscreen - Always visible, larger on mobile */}

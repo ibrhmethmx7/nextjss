@@ -7,11 +7,12 @@ import { database } from "@/lib/firebase";
 import { ref, push, onChildAdded, serverTimestamp } from "firebase/database";
 
 // Types
-type ReactionType = "heart" | "smile" | "like" | "party";
+type ReactionType = "heart" | "smile" | "like" | "party" | "text";
 interface Reaction {
     id: string;
     type: ReactionType;
-    x: number; // Random horizontal position
+    text?: string;
+    x: number;
 }
 
 // Icons Map
@@ -29,6 +30,13 @@ const COLORS = {
     party: "text-purple-500 fill-purple-500"
 };
 
+// Quick text reactions
+const QUICK_TEXTS = [
+    { text: "vah vah", bg: "bg-orange-500" },
+    { text: "haydeeee", bg: "bg-green-500" },
+    { text: "uiiyyyy", bg: "bg-pink-500" },
+];
+
 // --- Components ---
 
 export function ReactionOverlay({ roomId }: { roomId: string }) {
@@ -38,23 +46,22 @@ export function ReactionOverlay({ roomId }: { roomId: string }) {
         if (!roomId) return;
 
         const reactionsRef = ref(database, `rooms/${roomId}/reactions`);
-        // Listen for new reactions
         const unsubscribe = onChildAdded(reactionsRef, (snapshot) => {
             const data = snapshot.val();
-            if (!data || Date.now() - data.timestamp > 5000) return; // Ignore old reactions
+            if (!data || Date.now() - data.timestamp > 5000) return;
 
             const newReaction: Reaction = {
                 id: snapshot.key || Math.random().toString(),
                 type: data.type,
-                x: Math.random() * 80 + 10 // Random position 10% - 90%
+                text: data.text,
+                x: Math.random() * 70 + 15
             };
 
             setReactions((prev) => [...prev, newReaction]);
 
-            // Remove from DOM after animation
             setTimeout(() => {
                 setReactions((prev) => prev.filter((r) => r.id !== newReaction.id));
-            }, 2000);
+            }, 2500);
         });
 
         return () => unsubscribe();
@@ -64,15 +71,37 @@ export function ReactionOverlay({ roomId }: { roomId: string }) {
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-40">
             <AnimatePresence>
                 {reactions.map((reaction) => {
-                    const Icon = ICONS[reaction.type];
+                    // Text reaction
+                    if (reaction.type === "text" && reaction.text) {
+                        return (
+                            <motion.div
+                                key={reaction.id}
+                                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                                animate={{ opacity: 1, y: -150, scale: 1.2 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 2.5, ease: "easeOut" }}
+                                className="absolute bottom-20"
+                                style={{ left: `${reaction.x}%` }}
+                            >
+                                <span className="bg-white/90 text-black font-bold px-3 py-1.5 rounded-full text-sm md:text-base shadow-lg whitespace-nowrap">
+                                    {reaction.text}
+                                </span>
+                            </motion.div>
+                        );
+                    }
+
+                    // Emoji reaction
+                    const Icon = ICONS[reaction.type as keyof typeof ICONS];
+                    if (!Icon) return null;
+
                     return (
                         <motion.div
                             key={reaction.id}
                             initial={{ opacity: 0, y: 100, scale: 0.5 }}
-                            animate={{ opacity: 1, y: -200, scale: 1.5, x: (Math.random() - 0.5) * 50 }}
+                            animate={{ opacity: 1, y: -200, scale: 1.5 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 2, ease: "easeOut" }}
-                            className={`absolute bottom-20 ${COLORS[reaction.type]}`}
+                            className={`absolute bottom-20 ${COLORS[reaction.type as keyof typeof COLORS]}`}
                             style={{ left: `${reaction.x}%` }}
                         >
                             <Icon className="w-8 h-8 md:w-12 md:h-12 drop-shadow-lg" />
@@ -84,7 +113,7 @@ export function ReactionOverlay({ roomId }: { roomId: string }) {
     );
 }
 
-export function ReactionButton({ roomId, type }: { roomId: string; type: ReactionType }) {
+export function ReactionButton({ roomId, type }: { roomId: string; type: keyof typeof ICONS }) {
     const sendReaction = useCallback(() => {
         if (!roomId) return;
         push(ref(database, `rooms/${roomId}/reactions`), {
@@ -104,3 +133,26 @@ export function ReactionButton({ roomId, type }: { roomId: string; type: Reactio
         </button>
     );
 }
+
+export function QuickTextButton({ roomId, text, bg }: { roomId: string; text: string; bg: string }) {
+    const sendText = useCallback(() => {
+        if (!roomId) return;
+        push(ref(database, `rooms/${roomId}/reactions`), {
+            type: "text",
+            text,
+            timestamp: serverTimestamp()
+        });
+    }, [roomId, text]);
+
+    return (
+        <button
+            onClick={sendText}
+            className={`px-2 py-1 rounded-full ${bg} text-white text-xs font-semibold hover:opacity-80 transition-opacity active:scale-95`}
+        >
+            {text}
+        </button>
+    );
+}
+
+// Export quick texts for use in VideoControls
+export { QUICK_TEXTS };
