@@ -12,10 +12,24 @@ import AmbilightEffect from "@/components/player/AmbilightEffect";
 import MobileSeekOverlay from "@/components/player/MobileSeekOverlay";
 import { ReactionOverlay } from "@/components/player/ReactionSystem";
 import VideoControls from "@/components/player/VideoControls";
-import { ref, update, push, set, onValue, get } from "firebase/database";
+import { ref, update, push, set, onValue, get, onDisconnect, remove } from "firebase/database";
+import { Users, Palette } from "lucide-react";
 
 type QueueItem = { id: string; title: string; url: string; thumbnail?: string; movieId?: string; };
-type ChatMessage = { user: string; text: string; time: number; };
+
+type ChatMessage = { user: string; text: string; time: number; color?: string; };
+type ActiveUser = { id: string; name: string; color: string; online: boolean; };
+
+const USER_COLORS = [
+    "#3b82f6", // Blue
+    "#ef4444", // Red
+    "#10b981", // Emerald
+    "#f59e0b", // Amber
+    "#8b5cf6", // Violet
+    "#ec4899", // Pink
+    "#06b6d4", // Cyan
+    "#f97316", // Orange
+];
 
 // YouTube Player Types
 declare global {
@@ -53,8 +67,12 @@ function WatchContent() {
 
     const [queue, setQueue] = useState<QueueItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [activePanel, setActivePanel] = useState<"chat" | "queue">("chat");
+    const [activePanel, setActivePanel] = useState<"chat" | "queue" | "users">("chat");
     const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+    const [userColor, setUserColor] = useState(USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)]);
+    const [showColorPicker, setShowColorPicker] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -722,17 +740,48 @@ function WatchContent() {
                             <div className="flex border-b border-white/5 shrink-0">
                                 <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                                 <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
+                                <button onClick={() => setActivePanel("users")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "users" ? "bg-white/10 text-white" : "text-gray-400"}`}><Users className="h-4 w-4" /> Kişiler</button>
                             </div>
                             {activePanel === "chat" ? (
                                 <div className="flex-1 flex flex-col min-h-0">
                                     <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2 scroll-smooth">
                                         {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-8">Henüz mesaj yok</p>}
-                                        {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded-lg p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
+                                        {chatMessages.map((msg, i) => (
+                                            <div key={i} className="bg-white/5 rounded-lg p-2 flex gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="text-xs font-medium" style={{ color: msg.color || "#3b82f6" }}>{msg.user}</span>
+                                                    <p className="text-sm break-words">{msg.text}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="p-3 flex gap-2 border-t border-white/5 shrink-0">
+                                    <div className="p-3 flex gap-2 border-t border-white/5 shrink-0 items-center">
+                                        <div className="relative">
+                                            <button onClick={() => setShowColorPicker(!showColorPicker)} className="p-2 rounded hover:bg-white/10 transition-colors">
+                                                <div className="w-5 h-5 rounded-full border border-white/20" style={{ backgroundColor: userColor }} />
+                                            </button>
+                                            {showColorPicker && (
+                                                <div className="absolute bottom-12 left-0 bg-black/90 border border-white/10 p-2 rounded-lg grid grid-cols-4 gap-2 shadow-xl z-50 backdrop-blur-sm w-40">
+                                                    {USER_COLORS.map(c => (
+                                                        <button key={c} onClick={() => { setUserColor(c); setShowColorPicker(false); }} className="w-8 h-8 rounded-full hover:scale-110 transition-transform border border-white/10" style={{ backgroundColor: c }} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                         <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10 shrink-0"><Send className="h-4 w-4" /></Button>
                                     </div>
+                                </div>
+                            ) : activePanel === "users" ? (
+                                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                                    <h3 className="text-xs font-semibold text-gray-400 mb-2 px-1">ÇEVRİMİÇİ ({activeUsers.length})</h3>
+                                    {activeUsers.map(u => (
+                                        <div key={u.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                                            <div className="w-3 h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: u.color, boxShadow: `0 0 8px ${u.color}` }} />
+                                            <span className="text-sm font-medium">{u.name}</span>
+                                            {u.id === userId && <span className="text-xs text-gray-500 ml-auto">(Sen)</span>}
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <div className="flex-1 flex flex-col min-h-0">
@@ -780,17 +829,48 @@ function WatchContent() {
                         <div className="flex border-b border-white/5 shrink-0">
                             <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                             <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
+                            <button onClick={() => setActivePanel("users")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "users" ? "bg-white/10 text-white" : "text-gray-400"}`}><Users className="h-4 w-4" /> Kişiler</button>
                         </div>
                         {activePanel === "chat" ? (
                             <div className="flex-1 flex flex-col min-h-0">
                                 <div ref={mobileChatContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 scroll-smooth">
                                     {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Henüz mesaj yok</p>}
-                                    {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
+                                    {chatMessages.map((msg, i) => (
+                                        <div key={i} className="bg-white/5 rounded p-2 flex gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs font-medium" style={{ color: msg.color || "#3b82f6" }}>{msg.user}</span>
+                                                <p className="text-sm break-words">{msg.text}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="p-2 flex gap-2 border-t border-white/5 shrink-0">
+                                <div className="p-2 flex gap-2 border-t border-white/5 shrink-0 items-center">
+                                    <div className="relative">
+                                        <button onClick={() => setShowColorPicker(!showColorPicker)} className="p-2 rounded hover:bg-white/10 transition-colors">
+                                            <div className="w-5 h-5 rounded-full border border-white/20" style={{ backgroundColor: userColor }} />
+                                        </button>
+                                        {showColorPicker && (
+                                            <div className="absolute bottom-12 left-0 bg-black/90 border border-white/10 p-2 rounded-lg grid grid-cols-4 gap-2 shadow-xl z-50 backdrop-blur-sm w-40">
+                                                {USER_COLORS.map(c => (
+                                                    <button key={c} onClick={() => { setUserColor(c); setShowColorPicker(false); }} className="w-8 h-8 rounded-full hover:scale-110 transition-transform border border-white/10" style={{ backgroundColor: c }} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                     <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                     <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
                                 </div>
+                            </div>
+                        ) : activePanel === "users" ? (
+                            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                                <h3 className="text-xs font-semibold text-gray-400 mb-2 px-1">ÇEVRİMİÇİ ({activeUsers.length})</h3>
+                                {activeUsers.map(u => (
+                                    <div key={u.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                                        <div className="w-3 h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: u.color, boxShadow: `0 0 8px ${u.color}` }} />
+                                        <span className="text-sm font-medium">{u.name}</span>
+                                        {u.id === userId && <span className="text-xs text-gray-500 ml-auto">(Sen)</span>}
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <div className="flex-1 flex flex-col min-h-0">
