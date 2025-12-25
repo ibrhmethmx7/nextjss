@@ -118,6 +118,8 @@ function WatchContent() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
+    const [isLoading, setIsLoading] = useState(true);
+
     // Auto-scroll fullscreen chat
     useEffect(() => {
         if (showChatMessages && fullscreenChatRef.current) {
@@ -199,6 +201,7 @@ function WatchContent() {
         const unsubQueue = onValue(queueRef, (snapshot) => {
             const data = snapshot.val();
             if (data) setQueue(data as QueueItem[]);
+            setIsLoading(false);
         });
 
         const indexRef = ref(database, `rooms/${roomId}/currentIndex`);
@@ -713,6 +716,14 @@ function WatchContent() {
                         <Input placeholder="Video URL..." className="bg-white/5 border-white/10 h-12" style={{ fontSize: '16px' }} onKeyPress={(e) => { if (e.key === "Enter") { addToQueueByUrl((e.target as HTMLInputElement).value); } }} />
                     </div>
                 </div>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-black text-white">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
             </div>
         );
     }
