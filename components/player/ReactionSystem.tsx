@@ -32,22 +32,25 @@ const COLORS = {
 
 // Quick text reactions
 const QUICK_TEXTS = [
-    { text: "vah vah", bg: "bg-orange-500" },
-    { text: "haydeeee", bg: "bg-green-500" },
-    { text: "uiiyyyy", bg: "bg-pink-500" },
+    { text: "vah vah", icon: "😱", bg: "bg-orange-500" },
+    { text: "haydeeee", icon: "🤷‍♂️", bg: "bg-green-500" },
+    { text: "uiiyyyy", icon: "🐺", bg: "bg-pink-500" },
 ];
 
+// Music clips - local audio files
 // Music clips - local audio files
 const MUSIC_CLIPS = [
     {
         id: "yansima",
-        label: "🎵 Hastayım",
+        label: "Hastayım",
+        icon: "🤒",
         audioSrc: "/sounds/yansıma.mp3",
         bg: "bg-gradient-to-r from-purple-500 to-pink-500"
     },
     {
         id: "karakas",
-        label: "🎵 Kara Kaş",
+        label: "Kara Kaş",
+        icon: "🤨",
         audioSrc: "/sounds/karakas.mp3",
         bg: "bg-gradient-to-r from-amber-500 to-red-500"
     }
@@ -150,7 +153,7 @@ export function ReactionButton({ roomId, type }: { roomId: string; type: keyof t
     );
 }
 
-export function QuickTextButton({ roomId, text, bg }: { roomId: string; text: string; bg: string }) {
+export function QuickTextButton({ roomId, text, icon, bg }: { roomId: string; text: string; icon: string; bg: string }) {
     const sendText = useCallback(() => {
         if (!roomId) return;
         push(ref(database, `rooms/${roomId}/reactions`), {
@@ -165,7 +168,8 @@ export function QuickTextButton({ roomId, text, bg }: { roomId: string; text: st
             onClick={sendText}
             className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full ${bg} text-white text-[10px] md:text-xs font-semibold hover:opacity-80 transition-opacity active:scale-95`}
         >
-            {text}
+            <span className="md:hidden lg:inline">{text}</span>
+            <span className="hidden md:inline lg:hidden text-base">{icon}</span>
         </button>
     );
 }
@@ -173,10 +177,12 @@ export function QuickTextButton({ roomId, text, bg }: { roomId: string; text: st
 // Music Clip Button - plays local audio file
 export function MusicClipButton({
     label,
+    icon,
     audioSrc,
     bg
 }: {
     label: string;
+    icon: string;
     audioSrc: string;
     bg: string;
 }) {
@@ -216,7 +222,12 @@ export function MusicClipButton({
             disabled={isPlaying}
             className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full ${bg} text-white text-[10px] md:text-xs font-semibold hover:opacity-80 transition-all active:scale-95 ${isPlaying ? 'animate-pulse opacity-70' : ''}`}
         >
-            {isPlaying ? '🎶' : label}
+            {isPlaying ? '🎶' : (
+                <>
+                    <span className="md:hidden lg:inline">{label}</span>
+                    <span className="hidden md:inline lg:hidden text-base">{icon}</span>
+                </>
+            )}
         </button>
     );
 }

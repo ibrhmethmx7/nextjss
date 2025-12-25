@@ -665,13 +665,13 @@ function WatchContent() {
             )}
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-full' : ''}`}>
+            <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-full' : 'md:h-[calc(100vh-60px)]'}`}>
 
                 {/* Tablet/Desktop Layout - CSS Grid for perfect alignment */}
-                <div className={`${isFullscreen ? 'flex-1' : 'md:grid md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_384px] md:items-start md:gap-0'}`}>
+                <div className={`${isFullscreen ? 'flex-1' : 'flex-1 md:grid md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_384px] md:items-start md:gap-0 h-full'}`}>
 
                     {/* Video Container */}
-                    <div className={`relative w-full ${isFullscreen ? 'h-full' : 'aspect-video bg-black'}`}>
+                    <div className={`relative w-full ${isFullscreen ? 'h-full' : 'h-full bg-black'}`}>
                         <div className="absolute inset-0">
                             <AmbilightEffect thumbnailUrl={currentVideo?.thumbnail || getThumbnail(currentVideo?.url || "")} />
                             <div id="youtube-player" className="absolute inset-0 w-full h-full pointer-events-none" />

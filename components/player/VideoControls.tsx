@@ -216,6 +216,7 @@ const VideoControls = memo(function VideoControls({
                                             key={item.text}
                                             roomId={roomId}
                                             text={item.text}
+                                            icon={item.icon}
                                             bg={item.bg}
                                         />
                                     ))}
@@ -227,6 +228,7 @@ const VideoControls = memo(function VideoControls({
                                         <MusicClipButton
                                             key={clip.id}
                                             label={clip.label}
+                                            icon={clip.icon}
                                             audioSrc={clip.audioSrc}
                                             bg={clip.bg}
                                         />
