@@ -14,6 +14,9 @@ import { ReactionOverlay } from "@/components/player/ReactionSystem";
 import VideoControls from "@/components/player/VideoControls";
 import { ref, update, push, set, onValue, get, onDisconnect, remove } from "firebase/database";
 import { Users, Palette } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const VideoChat = dynamic(() => import('@/components/player/VideoChat'), { ssr: false });
 
 type QueueItem = { id: string; title: string; url: string; thumbnail?: string; movieId?: string; };
 
@@ -878,6 +881,8 @@ function WatchContent() {
                         )}
                     </div>
                 )}
+                {/* Video Chat Overlay */}
+                {roomId && userId && <VideoChat roomId={roomId} userId={userId} userName={currentUser} />}
             </div>
         </div>
     );
