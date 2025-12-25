@@ -6,7 +6,7 @@ import {
     Play, Pause, Maximize2, Minimize2, Volume2, VolumeX,
     SkipBack, SkipForward
 } from "lucide-react";
-import { ReactionButton, QuickTextButton, QUICK_TEXTS } from "./ReactionSystem";
+import { ReactionButton, QuickTextButton, MusicClipButton, QUICK_TEXTS, MUSIC_CLIPS } from "./ReactionSystem";
 
 interface VideoControlsProps {
     roomId: string;
@@ -217,6 +217,18 @@ const VideoControls = memo(function VideoControls({
                                             roomId={roomId}
                                             text={item.text}
                                             bg={item.bg}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Music Clip Buttons */}
+                                <div className="hidden md:flex items-center gap-1">
+                                    {MUSIC_CLIPS.map((clip) => (
+                                        <MusicClipButton
+                                            key={clip.id}
+                                            label={clip.label}
+                                            audioSrc={clip.audioSrc}
+                                            bg={clip.bg}
                                         />
                                     ))}
                                 </div>

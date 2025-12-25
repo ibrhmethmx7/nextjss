@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Smile, ThumbsUp, PartyPopper } from "lucide-react";
 import { database } from "@/lib/firebase";
@@ -35,6 +35,22 @@ const QUICK_TEXTS = [
     { text: "vah vah", bg: "bg-orange-500" },
     { text: "haydeeee", bg: "bg-green-500" },
     { text: "uiiyyyy", bg: "bg-pink-500" },
+];
+
+// Music clips - local audio files
+const MUSIC_CLIPS = [
+    {
+        id: "yansima",
+        label: "🎵 Hastayım",
+        audioSrc: "/sounds/yansıma.mp3",
+        bg: "bg-gradient-to-r from-purple-500 to-pink-500"
+    },
+    {
+        id: "karakas",
+        label: "🎵 Kara Kaş",
+        audioSrc: "/sounds/karakas.mp3",
+        bg: "bg-gradient-to-r from-amber-500 to-red-500"
+    }
 ];
 
 // --- Components ---
@@ -154,5 +170,56 @@ export function QuickTextButton({ roomId, text, bg }: { roomId: string; text: st
     );
 }
 
-// Export quick texts for use in VideoControls
-export { QUICK_TEXTS };
+// Music Clip Button - plays local audio file
+export function MusicClipButton({
+    label,
+    audioSrc,
+    bg
+}: {
+    label: string;
+    audioSrc: string;
+    bg: string;
+}) {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    const playClip = useCallback(() => {
+        if (isPlaying) return;
+
+        // Stop any existing audio
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+        }
+
+        setIsPlaying(true);
+
+        // Create and play audio
+        const audio = new Audio(audioSrc);
+        audioRef.current = audio;
+
+        audio.play().catch(err => {
+            console.error('Audio play failed:', err);
+            setIsPlaying(false);
+        });
+
+        // When audio ends
+        audio.onended = () => {
+            setIsPlaying(false);
+            audioRef.current = null;
+        };
+    }, [audioSrc, isPlaying]);
+
+    return (
+        <button
+            onClick={playClip}
+            disabled={isPlaying}
+            className={`px-2 py-1 rounded-full ${bg} text-white text-xs font-semibold hover:opacity-80 transition-all active:scale-95 ${isPlaying ? 'animate-pulse opacity-70' : ''}`}
+        >
+            {isPlaying ? '🎶' : label}
+        </button>
+    );
+}
+
+// Export constants for use in VideoControls
+export { QUICK_TEXTS, MUSIC_CLIPS };
