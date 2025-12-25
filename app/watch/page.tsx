@@ -664,13 +664,14 @@ function WatchContent() {
                 </div>
             )}
 
-            {/* Main Content - Flex row on tablet/desktop */}
-            <div className={`flex-1 flex flex-col md:flex-row ${isFullscreen ? 'h-full' : ''}`}>
+            {/* Main Content */}
+            <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-full' : ''}`}>
 
-                {/* Video Section - Contains only video on tablet */}
-                <div className="flex-1 flex flex-col md:block">
-                    {/* Video Container - 16:9 aspect ratio */}
-                    <div className={`relative w-full ${isFullscreen ? 'flex-1' : ''}`} style={!isFullscreen ? { paddingTop: '56.25%' } : {}}>
+                {/* Tablet/Desktop Layout - CSS Grid for perfect alignment */}
+                <div className={`${isFullscreen ? 'flex-1' : 'md:grid md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_384px] md:items-start md:gap-0'}`}>
+
+                    {/* Video Container */}
+                    <div className={`relative w-full ${isFullscreen ? 'h-full' : 'aspect-video bg-black'}`}>
                         <div className="absolute inset-0">
                             <AmbilightEffect thumbnailUrl={currentVideo?.thumbnail || getThumbnail(currentVideo?.url || "")} />
                             <div id="youtube-player" className="absolute inset-0 w-full h-full pointer-events-none" />
@@ -715,46 +716,33 @@ function WatchContent() {
                         </div>
                     </div>
 
-                    {/* Controls Bar - Mobile only */}
+                    {/* Tablet/Desktop Side Panel - Matches Video Height via Grid */}
                     {!isFullscreen && (
-                        <div className="md:hidden p-3 flex items-center justify-between gap-4 border-b border-white/5 bg-black/40 shrink-0">
-                            <Button size="sm" variant="outline" onClick={markCompleted} className="border-green-500/50 text-green-400 text-xs hover:bg-green-500/10">
-                                <CheckCircle className="h-4 w-4 mr-1" /> Bitirdik
-                            </Button>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">{currentIndex + 1}/{queue.length}</span>
-                                {isCreator && currentIndex < queue.length - 1 && <Button size="sm" onClick={playNext} className="bg-red-600 text-xs"><SkipForward className="h-4 w-4 mr-1" /> Sonraki</Button>}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Mobile Panel */}
-                    {!isFullscreen && (
-                        <div className="md:hidden flex-1 border-t border-white/5 bg-black/50 flex flex-col min-h-[250px]">
+                        <div className="hidden md:flex flex-col h-full border-l border-white/5 bg-black/30 overflow-hidden">
                             <div className="flex border-b border-white/5 shrink-0">
-                                <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
-                                <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
+                                <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
+                                <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
                             </div>
                             {activePanel === "chat" ? (
                                 <div className="flex-1 flex flex-col min-h-0">
-                                    <div ref={mobileChatContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 scroll-smooth">
-                                        {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Henüz mesaj yok</p>}
-                                        {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
+                                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2 scroll-smooth">
+                                        {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-8">Henüz mesaj yok</p>}
+                                        {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded-lg p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
                                     </div>
-                                    <div className="p-2 flex gap-2 border-t border-white/5 shrink-0">
-                                        <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
-                                        <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
+                                    <div className="p-3 flex gap-2 border-t border-white/5 shrink-0">
+                                        <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
+                                        <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10 shrink-0"><Send className="h-4 w-4" /></Button>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex-1 flex flex-col min-h-0">
-                                    <div className="p-2 flex gap-2 border-b border-white/5 shrink-0">
+                                    <div className="p-3 flex gap-2 border-b border-white/5 shrink-0">
                                         <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSearch()} placeholder="YouTube'da ara..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
-                                        <Button size="sm" onClick={handleSearch} className="bg-red-600 h-10"><Search className="h-4 w-4" /></Button>
+                                        <Button size="sm" onClick={handleSearch} className="bg-red-600 h-10 shrink-0"><Search className="h-4 w-4" /></Button>
                                     </div>
                                     {searchResults.length > 0 && (
-                                        <div className="p-2 space-y-1 max-h-24 overflow-y-auto border-b border-white/5 shrink-0">
-                                            {searchResults.map((item) => <div key={item.id.videoId} onClick={() => addToQueue(item)} className="flex gap-2 p-1 rounded hover:bg-white/10 cursor-pointer"><img src={item.snippet.thumbnails.default.url} className="w-10 h-6 rounded" /><p className="text-xs line-clamp-1">{item.snippet.title}</p></div>)}
+                                        <div className="p-2 space-y-1 max-h-32 overflow-y-auto border-b border-white/5 shrink-0">
+                                            {searchResults.map((item) => <div key={item.id.videoId} onClick={() => addToQueue(item)} className="flex gap-2 p-2 rounded hover:bg-white/10 cursor-pointer"><img src={item.snippet.thumbnails.default.url} className="w-16 h-10 rounded" /><p className="text-xs line-clamp-2 flex-1">{item.snippet.title}</p></div>)}
                                         </div>
                                     )}
                                     <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -773,33 +761,46 @@ function WatchContent() {
                     )}
                 </div>
 
-                {/* Tablet/Desktop Side Panel */}
+                {/* Controls Bar - Mobile only */}
                 {!isFullscreen && (
-                    <div className="hidden md:flex flex-col w-80 lg:w-96 border-l border-white/5 bg-black/30">
+                    <div className="md:hidden p-3 flex items-center justify-between gap-4 border-b border-white/5 bg-black/40 shrink-0">
+                        <Button size="sm" variant="outline" onClick={markCompleted} className="border-green-500/50 text-green-400 text-xs hover:bg-green-500/10">
+                            <CheckCircle className="h-4 w-4 mr-1" /> Bitirdik
+                        </Button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">{currentIndex + 1}/{queue.length}</span>
+                            {isCreator && currentIndex < queue.length - 1 && <Button size="sm" onClick={playNext} className="bg-red-600 text-xs"><SkipForward className="h-4 w-4 mr-1" /> Sonraki</Button>}
+                        </div>
+                    </div>
+                )}
+
+                {/* Mobile Panel */}
+                {!isFullscreen && (
+                    <div className="md:hidden flex-1 border-t border-white/5 bg-black/50 flex flex-col min-h-[250px]">
                         <div className="flex border-b border-white/5 shrink-0">
-                            <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
-                            <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
+                            <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
+                            <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
                         </div>
                         {activePanel === "chat" ? (
                             <div className="flex-1 flex flex-col min-h-0">
-                                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2 scroll-smooth">
-                                    {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-8">Henüz mesaj yok</p>}
-                                    {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded-lg p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
+                                <div ref={mobileChatContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 scroll-smooth">
+                                    {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Henüz mesaj yok</p>}
+                                    {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
                                 </div>
-                                <div className="p-3 flex gap-2 border-t border-white/5 shrink-0">
-                                    <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
+                                <div className="p-2 flex gap-2 border-t border-white/5 shrink-0">
+                                    <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                     <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex-1 flex flex-col min-h-0">
-                                <div className="p-3 flex gap-2 border-b border-white/5 shrink-0">
+                                <div className="p-2 flex gap-2 border-b border-white/5 shrink-0">
                                     <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSearch()} placeholder="YouTube'da ara..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                     <Button size="sm" onClick={handleSearch} className="bg-red-600 h-10"><Search className="h-4 w-4" /></Button>
                                 </div>
                                 {searchResults.length > 0 && (
-                                    <div className="p-2 space-y-1 max-h-32 overflow-y-auto border-b border-white/5 shrink-0">
-                                        {searchResults.map((item) => <div key={item.id.videoId} onClick={() => addToQueue(item)} className="flex gap-2 p-2 rounded hover:bg-white/10 cursor-pointer"><img src={item.snippet.thumbnails.default.url} className="w-16 h-10 rounded" /><p className="text-xs line-clamp-2 flex-1">{item.snippet.title}</p></div>)}
+                                    <div className="p-2 space-y-1 max-h-24 overflow-y-auto border-b border-white/5 shrink-0">
+                                        {searchResults.map((item) => <div key={item.id.videoId} onClick={() => addToQueue(item)} className="flex gap-2 p-1 rounded hover:bg-white/10 cursor-pointer"><img src={item.snippet.thumbnails.default.url} className="w-10 h-6 rounded" /><p className="text-xs line-clamp-1">{item.snippet.title}</p></div>)}
                                     </div>
                                 )}
                                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
