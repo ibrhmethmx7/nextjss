@@ -87,40 +87,43 @@ export default function MovieDetailPage() {
     }
 
     const statusOptions = [
-        { id: "watchlist", label: "İzleyeceğiz", icon: "bookmark" },
+        { id: "watchlist", label: "İzleme Listesi", icon: "bookmark" },
         { id: "watching", label: "İzliyoruz", icon: "play_circle" },
         { id: "completed", label: "Bitirdik", icon: "check_circle" },
     ];
 
     return (
         <div className="min-h-screen bg-[#141414] text-white">
-            {/* Hero Background */}
-            <div className="relative h-[60vh] md:h-[70vh]">
+            {/* Fixed Header - Same as Dashboard */}
+            <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 to-transparent">
+                <div className="px-4 md:px-12 py-4 flex items-center justify-between">
+                    <Link href="/dashboard" className="flex items-center gap-2">
+                        <span className="material-icons-round text-red-600 text-3xl">movie</span>
+                        <span className="text-red-600 font-bold text-xl">SELOFLIX</span>
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link href="/add-movie" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            <span className="material-icons-outlined text-white">add</span>
+                        </Link>
+                        <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <span className="material-icons-outlined text-gray-400 hover:text-red-500">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Hero Section */}
+            <div className="relative h-[50vh] md:h-[60vh] pt-16">
                 <img
                     src={getHQThumbnail(movie.poster)}
                     alt={movie.title}
                     className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/60 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-transparent to-transparent" />
-
-                {/* Top Navigation */}
-                <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-10">
-                    <Link
-                        href="/dashboard"
-                        className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-                    >
-                        <span className="material-icons-round">arrow_back</span>
-                        <span className="hidden md:inline">Geri</span>
-                    </Link>
-
-                    <button
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="p-2 rounded-full bg-black/50 hover:bg-red-600 transition-colors"
-                    >
-                        <span className="material-icons-outlined">delete</span>
-                    </button>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#141414]/80 via-transparent to-transparent" />
 
                 {/* Movie Info */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
@@ -128,7 +131,7 @@ export default function MovieDetailPage() {
                     {movie.year && <p className="text-gray-400 text-lg mb-4">{movie.year}</p>}
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-3 mb-6">
+                    <div className="flex flex-wrap gap-3">
                         {movie.videoUrl ? (
                             <Link
                                 href={`/watch?url=${encodeURIComponent(movie.videoUrl)}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}`}
@@ -143,13 +146,16 @@ export default function MovieDetailPage() {
                                 className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-white/90 transition-colors"
                             >
                                 <span className="material-icons-round">play_arrow</span>
-                                Birlikte İzle
+                                Video Seç
                             </Link>
                         )}
-                        <button className="flex items-center gap-2 bg-gray-500/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-500/50 transition-colors">
-                            <span className="material-icons-outlined">add</span>
-                            Listeye Ekle
-                        </button>
+                        <Link
+                            href="/dashboard"
+                            className="flex items-center gap-2 bg-gray-600/60 text-white px-6 py-3 rounded font-semibold hover:bg-gray-600/40 transition-colors"
+                        >
+                            <span className="material-icons-round">arrow_back</span>
+                            Geri
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -173,52 +179,58 @@ export default function MovieDetailPage() {
                     ))}
                 </div>
 
-                {/* Ratings Section - Netflix Style */}
-                <div className="flex flex-wrap gap-6">
-                    {/* İbrahim's Rating */}
-                    <div className="flex items-center gap-4 bg-white/5 rounded-lg px-5 py-4">
-                        <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center">
-                            <span className="text-2xl">💙</span>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-400">İbrahim</p>
-                            <div className="flex gap-0.5 mt-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        onClick={() => currentUser === "ben" && updateRating(star === editRating ? 0 : star)}
-                                        disabled={currentUser !== "ben"}
-                                        className={`${currentUser === "ben" ? "hover:scale-125 cursor-pointer" : "cursor-default"} transition-transform`}
-                                    >
-                                        <span className={`material-icons text-xl ${star <= (movie.myRating || 0) ? "text-yellow-400" : "text-gray-600"}`}>
-                                            {star <= (movie.myRating || 0) ? "star" : "star_border"}
-                                        </span>
-                                    </button>
-                                ))}
+                {/* Ratings Section */}
+                <div>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-300">
+                        <span className="material-icons-round">star</span>
+                        Puanlarımız
+                    </h3>
+                    <div className="flex flex-wrap gap-4">
+                        {/* İbrahim's Rating */}
+                        <div className="flex items-center gap-4 bg-gray-800/50 rounded-lg px-6 py-4 border border-gray-700/50">
+                            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                                <span className="material-icons-round text-white">person</span>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-400 mb-1">İbrahim</p>
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => currentUser === "ben" && updateRating(star === editRating ? 0 : star)}
+                                            disabled={currentUser !== "ben"}
+                                            className={`${currentUser === "ben" ? "hover:scale-110 cursor-pointer" : "cursor-default"} transition-transform`}
+                                        >
+                                            <span className={`material-icons text-2xl ${star <= (movie.myRating || 0) ? "text-yellow-400" : "text-gray-600"}`}>
+                                                {star <= (movie.myRating || 0) ? "star" : "star_border"}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Selina's Rating */}
-                    <div className="flex items-center gap-4 bg-white/5 rounded-lg px-5 py-4">
-                        <div className="w-12 h-12 rounded-full bg-pink-600/20 flex items-center justify-center">
-                            <span className="text-2xl">💖</span>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-400">Selina</p>
-                            <div className="flex gap-0.5 mt-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        onClick={() => currentUser === "sen" && updateRating(star === editRating ? 0 : star)}
-                                        disabled={currentUser !== "sen"}
-                                        className={`${currentUser === "sen" ? "hover:scale-125 cursor-pointer" : "cursor-default"} transition-transform`}
-                                    >
-                                        <span className={`material-icons text-xl ${star <= (movie.theirRating || 0) ? "text-yellow-400" : "text-gray-600"}`}>
-                                            {star <= (movie.theirRating || 0) ? "star" : "star_border"}
-                                        </span>
-                                    </button>
-                                ))}
+                        {/* Selinay's Rating */}
+                        <div className="flex items-center gap-4 bg-gray-800/50 rounded-lg px-6 py-4 border border-gray-700/50">
+                            <div className="w-10 h-10 rounded-lg bg-pink-600 flex items-center justify-center">
+                                <span className="material-icons-round text-white">favorite</span>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-400 mb-1">Selinay</p>
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => currentUser === "sen" && updateRating(star === editRating ? 0 : star)}
+                                            disabled={currentUser !== "sen"}
+                                            className={`${currentUser === "sen" ? "hover:scale-110 cursor-pointer" : "cursor-default"} transition-transform`}
+                                        >
+                                            <span className={`material-icons text-2xl ${star <= (movie.theirRating || 0) ? "text-yellow-400" : "text-gray-600"}`}>
+                                                {star <= (movie.theirRating || 0) ? "star" : "star_border"}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
