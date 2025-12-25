@@ -715,9 +715,9 @@ function WatchContent() {
                         </div>
                     </div>
 
-                    {/* Controls Bar */}
+                    {/* Controls Bar - Mobile only */}
                     {!isFullscreen && (
-                        <div className="p-3 flex items-center justify-between gap-2 border-b border-white/5 bg-black/40 shrink-0">
+                        <div className="md:hidden p-3 flex items-center justify-between gap-4 border-b border-white/5 bg-black/40 shrink-0">
                             <Button size="sm" variant="outline" onClick={markCompleted} className="border-green-500/50 text-green-400 text-xs hover:bg-green-500/10">
                                 <CheckCircle className="h-4 w-4 mr-1" /> Bitirdik
                             </Button>
@@ -733,7 +733,7 @@ function WatchContent() {
                         <div className="md:hidden flex-1 border-t border-white/5 bg-black/50 flex flex-col min-h-[250px]">
                             <div className="flex border-b border-white/5 shrink-0">
                                 <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
-                                <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /></button>
+                                <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
                             </div>
                             {activePanel === "chat" ? (
                                 <div className="flex-1 flex flex-col min-h-0">

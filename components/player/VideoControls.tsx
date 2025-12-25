@@ -201,16 +201,16 @@ const VideoControls = memo(function VideoControls({
 
                             {/* Right Controls */}
                             <div className="flex items-center gap-2 md:gap-3">
-                                {/* Reactions - Only on desktop */}
-                                <div className="hidden md:flex items-center gap-1">
+                                {/* Reactions - Only on large screens */}
+                                <div className="hidden lg:flex items-center gap-1">
                                     <ReactionButton roomId={roomId} type="heart" />
                                     <ReactionButton roomId={roomId} type="smile" />
                                     <ReactionButton roomId={roomId} type="like" />
                                     <ReactionButton roomId={roomId} type="party" />
                                 </div>
 
-                                {/* Quick Text Reactions */}
-                                <div className="hidden md:flex items-center gap-1">
+                                {/* Quick Text Reactions - Only on large screens */}
+                                <div className="hidden lg:flex items-center gap-1">
                                     {QUICK_TEXTS.map((item) => (
                                         <QuickTextButton
                                             key={item.text}
@@ -221,8 +221,8 @@ const VideoControls = memo(function VideoControls({
                                     ))}
                                 </div>
 
-                                {/* Music Clip Buttons */}
-                                <div className="hidden md:flex items-center gap-1">
+                                {/* Music Clip Buttons - Only on large screens */}
+                                <div className="hidden lg:flex items-center gap-1">
                                     {MUSIC_CLIPS.map((clip) => (
                                         <MusicClipButton
                                             key={clip.id}
