@@ -227,9 +227,10 @@ const VideoControls = memo(function VideoControls({
                                     {MUSIC_CLIPS.map((clip) => (
                                         <MusicClipButton
                                             key={clip.id}
+                                            roomId={roomId}
+                                            id={clip.id}
                                             label={clip.label}
                                             icon={clip.icon}
-                                            audioSrc={clip.audioSrc}
                                             bg={clip.bg}
                                         />
                                     ))}

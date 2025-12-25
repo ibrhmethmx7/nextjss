@@ -7,11 +7,12 @@ import { database } from "@/lib/firebase";
 import { ref, push, onChildAdded, serverTimestamp } from "firebase/database";
 
 // Types
-type ReactionType = "heart" | "smile" | "like" | "party" | "text";
+type ReactionType = "heart" | "smile" | "like" | "party" | "text" | "sound";
 interface Reaction {
     id: string;
     type: ReactionType;
     text?: string;
+    soundId?: string;
     x: number;
 }
 
@@ -73,13 +74,28 @@ const MUSIC_CLIPS = [
 export function ReactionOverlay({ roomId }: { roomId: string }) {
     const [reactions, setReactions] = useState<Reaction[]>([]);
 
+    // Sound effect player
+    const playSound = useCallback((soundId: string) => {
+        const clip = MUSIC_CLIPS.find(c => c.id === soundId);
+        if (clip) {
+            const audio = new Audio(clip.audioSrc);
+            audio.play().catch(e => console.error("Error playing sound:", e));
+        }
+    }, []);
+
     useEffect(() => {
         if (!roomId) return;
 
         const reactionsRef = ref(database, `rooms/${roomId}/reactions`);
         const unsubscribe = onChildAdded(reactionsRef, (snapshot) => {
             const data = snapshot.val();
-            if (!data || Date.now() - data.timestamp > 5000) return;
+            if (!data || Date.now() - (data.timestamp || 0) > 5000) return;
+
+            // Handle sound events separately - they don't need visual elements on screen
+            if (data.type === "sound" && data.soundId) {
+                playSound(data.soundId);
+                return;
+            }
 
             const newReaction: Reaction = {
                 id: snapshot.key || Math.random().toString(),
@@ -96,7 +112,7 @@ export function ReactionOverlay({ roomId }: { roomId: string }) {
         });
 
         return () => unsubscribe();
-    }, [roomId]);
+    }, [roomId, playSound]);
 
     return (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-40">
@@ -188,45 +204,35 @@ export function QuickTextButton({ roomId, text, icon, bg }: { roomId: string; te
 
 // Music Clip Button - plays local audio file
 export function MusicClipButton({
+    roomId,
+    id,
     label,
     icon,
-    audioSrc,
     bg
 }: {
+    roomId: string;
+    id: string;
     label: string;
     icon: string;
-    audioSrc: string;
     bg: string;
 }) {
     const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const playClip = useCallback(() => {
-        if (isPlaying) return;
-
-        // Stop any existing audio
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
-        }
+        if (!roomId || isPlaying) return;
 
         setIsPlaying(true);
 
-        // Create and play audio
-        const audio = new Audio(audioSrc);
-        audioRef.current = audio;
-
-        audio.play().catch(err => {
-            console.error('Audio play failed:', err);
-            setIsPlaying(false);
+        // Push sound event to Firebase
+        push(ref(database, `rooms/${roomId}/reactions`), {
+            type: "sound",
+            soundId: id,
+            timestamp: serverTimestamp()
         });
 
-        // When audio ends
-        audio.onended = () => {
-            setIsPlaying(false);
-            audioRef.current = null;
-        };
-    }, [audioSrc, isPlaying]);
+        // Reset button state after a short delay
+        setTimeout(() => setIsPlaying(false), 2000);
+    }, [roomId, id, isPlaying]);
 
     return (
         <button
