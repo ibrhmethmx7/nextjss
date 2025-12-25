@@ -327,9 +327,8 @@ function extractSeriesName(title: string): string {
     return cleanTitle || title;
 }
 
-// Completed Section with Series Grouping - Modal View
+// Completed Section with Series Grouping - Navigates to Series Detail Page
 function CompletedSection({ movies, router }: { movies: Movie[]; router: any }) {
-    const [selectedSeries, setSelectedSeries] = useState<{ name: string; episodes: Movie[] } | null>(null);
 
     // Group movies by series
     const groupedMovies = movies.reduce((acc, movie) => {
@@ -349,125 +348,57 @@ function CompletedSection({ movies, router }: { movies: Movie[]; router: any }) 
     const seriesNames = Object.keys(groupedMovies);
 
     return (
-        <>
-            <section className="mb-8">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300">
-                    <span className="material-icons-round text-lg">check_circle</span>
-                    Bitirdiklerimiz
-                    <span className="text-gray-500 text-sm font-normal">({movies.length} bölüm, {seriesNames.length} dizi/film)</span>
-                </h3>
+        <section className="mb-8">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300">
+                <span className="material-icons-round text-lg">check_circle</span>
+                Bitirdiklerimiz
+                <span className="text-gray-500 text-sm font-normal">({movies.length} bölüm, {seriesNames.length} dizi/film)</span>
+            </h3>
 
-                {/* Series Grid */}
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-                    {seriesNames.map((seriesName) => {
-                        const episodes = groupedMovies[seriesName];
-                        const firstEpisode = episodes[0];
-                        const isSingleEpisode = episodes.length === 1;
+            {/* Series Grid */}
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                {seriesNames.map((seriesName) => {
+                    const episodes = groupedMovies[seriesName];
+                    const firstEpisode = episodes[0];
+                    const isSingleEpisode = episodes.length === 1;
 
-                        return (
-                            <div
-                                key={seriesName}
-                                onClick={() => {
-                                    if (isSingleEpisode) {
-                                        router.push(`/movie/${firstEpisode.id}`);
-                                    } else {
-                                        setSelectedSeries({ name: seriesName, episodes });
-                                    }
-                                }}
-                                className="flex-shrink-0 w-64 md:w-80 group cursor-pointer"
-                            >
-                                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
-                                    <img
-                                        src={firstEpisode.poster || `https://picsum.photos/seed/${firstEpisode.id}/640/360`}
-                                        alt={seriesName}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                    {/* Episode count badge */}
-                                    {!isSingleEpisode && (
-                                        <div className="absolute top-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-semibold">
-                                            {episodes.length} Bölüm
-                                        </div>
-                                    )}
-                                    {/* Hover overlay */}
-                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="material-icons-round text-4xl">
-                                            {isSingleEpisode ? 'play_circle' : 'view_list'}
-                                        </span>
+                    return (
+                        <div
+                            key={seriesName}
+                            onClick={() => {
+                                if (isSingleEpisode) {
+                                    router.push(`/movie/${firstEpisode.id}`);
+                                } else {
+                                    // Navigate to series detail page
+                                    router.push(`/series/${encodeURIComponent(seriesName)}`);
+                                }
+                            }}
+                            className="flex-shrink-0 w-64 md:w-80 group cursor-pointer"
+                        >
+                            <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
+                                <img
+                                    src={firstEpisode.poster || `https://picsum.photos/seed/${firstEpisode.id}/640/360`}
+                                    alt={seriesName}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                                {/* Episode count badge */}
+                                {!isSingleEpisode && (
+                                    <div className="absolute top-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-semibold">
+                                        {episodes.length} Bölüm
                                     </div>
+                                )}
+                                {/* Hover overlay */}
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="material-icons-round text-4xl">
+                                        {isSingleEpisode ? 'play_circle' : 'view_list'}
+                                    </span>
                                 </div>
-                                <p className="text-sm mt-2 truncate text-gray-300">{seriesName}</p>
                             </div>
-                        );
-                    })}
-                </div>
-            </section>
-
-            {/* Series Detail Modal */}
-            {selectedSeries && (
-                <div
-                    className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-                    onClick={() => setSelectedSeries(null)}
-                >
-                    <div
-                        className="bg-[#1a1a1a] rounded-xl max-w-3xl w-full max-h-[85vh] overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Header */}
-                        <div className="relative h-48 md:h-64">
-                            <img
-                                src={selectedSeries.episodes[0]?.poster || ''}
-                                alt={selectedSeries.name}
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-black/50" />
-                            <button
-                                onClick={() => setSelectedSeries(null)}
-                                className="absolute top-4 right-4 p-2 bg-black/50 rounded-full hover:bg-black/70"
-                            >
-                                <span className="material-icons-round">close</span>
-                            </button>
-                            <div className="absolute bottom-4 left-4 right-4">
-                                <h2 className="text-2xl md:text-3xl font-bold">{selectedSeries.name}</h2>
-                                <p className="text-gray-400 text-sm mt-1">{selectedSeries.episodes.length} Bölüm</p>
-                            </div>
+                            <p className="text-sm mt-2 truncate text-gray-300">{seriesName}</p>
                         </div>
-
-                        {/* Episodes List */}
-                        <div className="p-4 overflow-y-auto max-h-[50vh]">
-                            <div className="grid gap-3">
-                                {selectedSeries.episodes.map((episode, index) => (
-                                    <div
-                                        key={episode.id}
-                                        className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                                        onClick={() => router.push(`/movie/${episode.id}`)}
-                                    >
-                                        <span className="text-gray-500 text-sm w-6">{index + 1}</span>
-                                        <img
-                                            src={episode.poster}
-                                            alt={episode.title}
-                                            className="w-28 h-16 object-cover rounded"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium truncate">{episode.title}</p>
-                                        </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (episode.videoUrl) {
-                                                    router.push(`/watch?url=${encodeURIComponent(episode.videoUrl)}&title=${encodeURIComponent(episode.title)}&movieId=${episode.id}`);
-                                                }
-                                            }}
-                                            className="p-2 bg-red-600 rounded-full hover:bg-red-700"
-                                        >
-                                            <span className="material-icons-round">play_arrow</span>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
+                    );
+                })}
+            </div>
+        </section>
     );
 }
