@@ -666,7 +666,7 @@ function WatchContent() {
             )}
 
             {/* Main Content Row - Video + Side Panel */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex flex-col overflow-hidden">
 
                 {/* Video + Side Panel Row (same height) */}
                 <div className="flex flex-row" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
