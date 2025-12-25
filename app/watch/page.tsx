@@ -528,7 +528,12 @@ function WatchContent() {
 
     const sendMessage = async () => {
         if (!newMessage.trim() || !roomId) return;
-        await set(push(ref(database, `rooms/${roomId}/messages`)), { user: currentUser === "ben" ? "Ben" : "Sen", text: newMessage, time: Date.now() });
+        await set(push(ref(database, `rooms/${roomId}/messages`)), {
+            user: currentUser,
+            text: newMessage,
+            time: Date.now(),
+            color: userColor
+        });
         setNewMessage("");
     };
 
