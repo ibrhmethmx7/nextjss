@@ -93,17 +93,12 @@ export function ReactionOverlay({ roomId }: { roomId: string }) {
             const eventTime = data.timestamp || 0;
 
             // Debug logs
-            console.log("New reaction received:", data);
-
-            // Skip old events (older than 30 seconds)
-            if (!data || now - eventTime > 30000) {
-                console.log("Skipping old event:", now - eventTime, "ms old");
+            // 30 saniyeden eski eventleri yoksay (sayfa yenilenince hepsini çalmasın)
+            if (now - eventTime > 30000) {
                 return;
             }
 
-            // Handle sound events separately - they don't need visual elements on screen
             if (data.type === "sound" && data.soundId) {
-                console.log("Playing sound:", data.soundId);
                 playSound(data.soundId);
                 return;
             }

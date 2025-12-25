@@ -191,7 +191,6 @@ function WatchContent() {
             const data = snapshot.val();
             if (data) {
                 const messages = Object.values(data) as ChatMessage[];
-                console.log("TÜM MESAJLAR:", messages);
                 setChatMessages(messages);
             }
         });
@@ -300,7 +299,6 @@ function WatchContent() {
                     if (movieId && time > 0 && dur > 0 && (now - lastSaveRef.current > 5000)) {
                         lastSaveRef.current = now;
                         const progress = (time / dur) * 100;
-                        console.log(`Saving progress: ${time.toFixed(0)}s (${progress.toFixed(0)}%) for movie ${movieId}`);
                         update(ref(database, `movies/${movieId}`), {
                             watchProgress: Math.floor(time),
                             watchProgressPercent: Math.round(progress),
@@ -368,7 +366,6 @@ function WatchContent() {
 
     const onPlayerReady = (event: any) => {
         const player = event.target;
-        console.log("🎬 onPlayerReady called, startTime:", startTime);
 
         if (typeof player.getDuration === 'function') {
             setDuration(player.getDuration());
@@ -382,13 +379,11 @@ function WatchContent() {
 
         // Resume from URL startTime parameter (most reliable)
         if (startTime > 0 && typeof player.seekTo === 'function') {
-            console.log("🎬 Seeking to:", startTime, "seconds");
             setTimeout(() => {
                 player.seekTo(startTime, true);
                 if (typeof player.playVideo === 'function') {
                     player.playVideo();
                 }
-                console.log("🎬 SeekTo executed!");
             }, 1500);
         }
     };
