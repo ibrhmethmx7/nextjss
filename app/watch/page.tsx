@@ -718,7 +718,7 @@ function WatchContent() {
 
                     {/* Tablet/Desktop Side Panel - Matches Video Height via Grid */}
                     {!isFullscreen && (
-                        <div className="hidden md:flex flex-col h-full border-l border-white/5 bg-black/30 overflow-hidden">
+                        <div className="hidden md:flex flex-col h-full min-h-0 border-l border-white/5 bg-black/30 overflow-hidden">
                             <div className="flex border-b border-white/5 shrink-0">
                                 <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                                 <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
