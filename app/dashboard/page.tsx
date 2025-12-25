@@ -21,6 +21,20 @@ type Movie = {
     lastWatched?: number;
 };
 
+// Get highest quality YouTube thumbnail
+function getHQThumbnail(url: string): string {
+    if (!url) return "";
+    // Convert YouTube thumbnail to max resolution
+    if (url.includes("ytimg.com") || url.includes("youtube.com")) {
+        // Extract video ID and use maxresdefault
+        const match = url.match(/\/vi\/([^/]+)\//);
+        if (match) {
+            return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+        }
+    }
+    return url;
+}
+
 export default function DashboardPage() {
     const [movies, setMovies] = useState<Movie[]>([]);
     const [activeTab, setActiveTab] = useState<"watchlist" | "completed">("watchlist");
@@ -166,7 +180,7 @@ export default function DashboardPage() {
                 {continueWatchingMovies.length > 0 && (
                     <div className="relative h-[50vh] md:h-[60vh] mb-8 rounded-xl overflow-hidden">
                         <img
-                            src={continueWatchingMovies[0].poster || `https://picsum.photos/seed/${continueWatchingMovies[0].id}/1920/1080`}
+                            src={getHQThumbnail(continueWatchingMovies[0].poster) || `https://picsum.photos/seed/${continueWatchingMovies[0].id}/1920/1080`}
                             alt={continueWatchingMovies[0].title}
                             className="w-full h-full object-cover"
                         />
