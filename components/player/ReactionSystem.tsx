@@ -163,7 +163,7 @@ export function QuickTextButton({ roomId, text, bg }: { roomId: string; text: st
     return (
         <button
             onClick={sendText}
-            className={`px-2 py-1 rounded-full ${bg} text-white text-xs font-semibold hover:opacity-80 transition-opacity active:scale-95`}
+            className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full ${bg} text-white text-[10px] md:text-xs font-semibold hover:opacity-80 transition-opacity active:scale-95`}
         >
             {text}
         </button>
@@ -214,7 +214,7 @@ export function MusicClipButton({
         <button
             onClick={playClip}
             disabled={isPlaying}
-            className={`px-2 py-1 rounded-full ${bg} text-white text-xs font-semibold hover:opacity-80 transition-all active:scale-95 ${isPlaying ? 'animate-pulse opacity-70' : ''}`}
+            className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full ${bg} text-white text-[10px] md:text-xs font-semibold hover:opacity-80 transition-all active:scale-95 ${isPlaying ? 'animate-pulse opacity-70' : ''}`}
         >
             {isPlaying ? '🎶' : label}
         </button>
