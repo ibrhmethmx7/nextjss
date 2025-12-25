@@ -162,6 +162,43 @@ export default function DashboardPage() {
             {/* Main Content */}
             <main className="pt-28 md:pt-20 pb-20 px-4 md:px-12">
 
+                {/* Hero Banner - Featured Movie */}
+                {continueWatchingMovies.length > 0 && (
+                    <div className="relative h-[50vh] md:h-[60vh] mb-8 rounded-xl overflow-hidden">
+                        <img
+                            src={continueWatchingMovies[0].poster || `https://picsum.photos/seed/${continueWatchingMovies[0].id}/1920/1080`}
+                            alt={continueWatchingMovies[0].title}
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/40 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#141414]/90 via-transparent to-transparent" />
+
+                        <div className="absolute bottom-8 left-8 right-8 md:right-auto md:max-w-lg">
+                            <h2 className="text-2xl md:text-4xl font-bold mb-3">{continueWatchingMovies[0].title}</h2>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        const movie = continueWatchingMovies[0];
+                                        const startTime = movie.watchProgress ? Math.floor(Math.max(0, movie.watchProgress - 5)) : 0;
+                                        router.push(`/watch?url=${encodeURIComponent(movie.videoUrl || "")}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}&startTime=${startTime}`);
+                                    }}
+                                    className="flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded font-semibold hover:bg-white/90 transition-colors"
+                                >
+                                    <span className="material-icons-round">play_arrow</span>
+                                    Oynat
+                                </button>
+                                <Link
+                                    href={`/movie/${continueWatchingMovies[0].id}`}
+                                    className="flex items-center gap-2 bg-gray-500/60 text-white px-5 py-2.5 rounded font-semibold hover:bg-gray-500/40 transition-colors"
+                                >
+                                    <span className="material-icons-outlined">info</span>
+                                    Detaylar
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Continue Watching Section - Movies with any progress */}
                 {continueWatchingMovies.length > 0 && (
                     <section className="mb-8">
@@ -302,7 +339,7 @@ export default function DashboardPage() {
     );
 }
 
-// Movie Row Component
+// Movie Row Component - Horizontal 16:9 Cards
 function MovieRow({ title, icon, movies, router }: { title: string; icon: string; movies: Movie[]; router: any }) {
     return (
         <section className="mb-8">
@@ -310,25 +347,32 @@ function MovieRow({ title, icon, movies, router }: { title: string; icon: string
                 <span className="material-icons-round text-lg">{icon}</span>
                 {title}
             </h3>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
                 {movies.slice(0, 10).map((movie) => (
-                    <Link
+                    <div
                         key={movie.id}
-                        href={`/movie/${movie.id}`}
-                        className="flex-shrink-0 w-32 md:w-40 group"
+                        onClick={() => {
+                            if (movie.videoUrl) {
+                                const startTime = movie.watchProgress ? Math.floor(Math.max(0, movie.watchProgress - 5)) : 0;
+                                router.push(`/watch?url=${encodeURIComponent(movie.videoUrl)}&title=${encodeURIComponent(movie.title)}&movieId=${movie.id}&startTime=${startTime}`);
+                            } else {
+                                router.push(`/movie/${movie.id}`);
+                            }
+                        }}
+                        className="flex-shrink-0 w-64 md:w-80 group cursor-pointer"
                     >
-                        <div className="aspect-[2/3] rounded overflow-hidden bg-gray-800 relative">
+                        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
                             <img
-                                src={movie.poster || `https://picsum.photos/seed/${movie.id}/300/450`}
+                                src={movie.poster || `https://picsum.photos/seed/${movie.id}/640/360`}
                                 alt={movie.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="material-icons-round text-4xl">play_circle</span>
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="material-icons-round text-5xl text-white">play_circle</span>
                             </div>
                         </div>
                         <p className="text-sm mt-2 truncate text-gray-300">{movie.title}</p>
-                    </Link>
+                    </div>
                 ))}
             </div>
         </section>
