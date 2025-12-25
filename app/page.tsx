@@ -62,8 +62,8 @@ export default function LoginPage() {
                   disabled={loading}
                   className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:bg-white/5 transition-all disabled:opacity-50"
                 >
-                  <div className="w-24 h-24 md:w-28 md:h-28 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center group-hover:ring-4 ring-white transition-all">
-                    <span className="material-icons-round text-white text-5xl">person</span>
+                  <div className="w-24 h-24 md:w-28 md:h-28 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center group-hover:ring-4 ring-white transition-all">
+                    <span className="text-5xl">🐻</span>
                   </div>
                   <span className="text-gray-400 group-hover:text-white transition-colors text-lg">İbrahim</span>
                 </button>
@@ -74,8 +74,8 @@ export default function LoginPage() {
                   disabled={loading}
                   className="group flex flex-col items-center gap-3 p-4 rounded-lg hover:bg-white/5 transition-all disabled:opacity-50"
                 >
-                  <div className="w-24 h-24 md:w-28 md:h-28 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center group-hover:ring-4 ring-white transition-all">
-                    <span className="material-icons-round text-white text-5xl">favorite</span>
+                  <div className="w-24 h-24 md:w-28 md:h-28 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center group-hover:ring-4 ring-white transition-all">
+                    <span className="text-5xl">🦄</span>
                   </div>
                   <span className="text-gray-400 group-hover:text-white transition-colors text-lg">Selinay</span>
                 </button>
@@ -84,9 +84,9 @@ export default function LoginPage() {
               /* Password Entry */
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${selectedUser === "ben" ? "bg-gradient-to-br from-blue-500 to-blue-700" : "bg-gradient-to-br from-pink-500 to-rose-600"}`}>
-                    <span className="material-icons-round text-white text-3xl">
-                      {selectedUser === "ben" ? "person" : "favorite"}
+                  <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${selectedUser === "ben" ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-gradient-to-br from-purple-500 to-pink-500"}`}>
+                    <span className="text-3xl">
+                      {selectedUser === "ben" ? "🐻" : "🦄"}
                     </span>
                   </div>
                   <div>

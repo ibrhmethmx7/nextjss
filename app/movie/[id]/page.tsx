@@ -188,8 +188,8 @@ export default function MovieDetailPage() {
                     <div className="flex flex-wrap gap-4">
                         {/* İbrahim's Rating */}
                         <div className="flex items-center gap-4 bg-gray-800/50 rounded-lg px-6 py-4 border border-gray-700/50">
-                            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                                <span className="material-icons-round text-white">person</span>
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                                <span className="text-xl">🐻</span>
                             </div>
                             <div>
                                 <p className="text-sm text-gray-400 mb-1">İbrahim</p>
@@ -212,8 +212,8 @@ export default function MovieDetailPage() {
 
                         {/* Selinay's Rating */}
                         <div className="flex items-center gap-4 bg-gray-800/50 rounded-lg px-6 py-4 border border-gray-700/50">
-                            <div className="w-10 h-10 rounded-lg bg-pink-600 flex items-center justify-center">
-                                <span className="material-icons-round text-white">favorite</span>
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                <span className="text-xl">🦄</span>
                             </div>
                             <div>
                                 <p className="text-sm text-gray-400 mb-1">Selinay</p>
