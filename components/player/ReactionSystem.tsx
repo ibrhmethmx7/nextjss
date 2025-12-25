@@ -89,10 +89,21 @@ export function ReactionOverlay({ roomId }: { roomId: string }) {
         const reactionsRef = ref(database, `rooms/${roomId}/reactions`);
         const unsubscribe = onChildAdded(reactionsRef, (snapshot) => {
             const data = snapshot.val();
-            if (!data || Date.now() - (data.timestamp || 0) > 5000) return;
+            const now = Date.now();
+            const eventTime = data.timestamp || 0;
+
+            // Debug logs
+            console.log("New reaction received:", data);
+
+            // Skip old events (older than 30 seconds)
+            if (!data || now - eventTime > 30000) {
+                console.log("Skipping old event:", now - eventTime, "ms old");
+                return;
+            }
 
             // Handle sound events separately - they don't need visual elements on screen
             if (data.type === "sound" && data.soundId) {
+                console.log("Playing sound:", data.soundId);
                 playSound(data.soundId);
                 return;
             }
