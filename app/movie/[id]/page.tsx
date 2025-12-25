@@ -18,6 +18,18 @@ type Movie = {
     addedAt: number;
 };
 
+// Get highest quality YouTube thumbnail
+function getHQThumbnail(url: string): string {
+    if (!url) return "";
+    if (url.includes("ytimg.com") || url.includes("youtube.com")) {
+        const match = url.match(/\/vi\/([^/]+)\//);
+        if (match) {
+            return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+        }
+    }
+    return url;
+}
+
 export default function MovieDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -85,7 +97,7 @@ export default function MovieDetailPage() {
             {/* Hero Background */}
             <div className="relative h-[60vh] md:h-[70vh]">
                 <img
-                    src={movie.poster}
+                    src={getHQThumbnail(movie.poster)}
                     alt={movie.title}
                     className="absolute inset-0 w-full h-full object-cover"
                 />
