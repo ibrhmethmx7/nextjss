@@ -667,8 +667,8 @@ function WatchContent() {
             {/* Main Content - Flex row on tablet/desktop */}
             <div className={`flex-1 flex flex-col md:flex-row ${isFullscreen ? 'h-full' : ''}`}>
 
-                {/* Video Section */}
-                <div className="flex-1 flex flex-col">
+                {/* Video Section - Contains only video on tablet */}
+                <div className="flex-1 flex flex-col md:block">
                     {/* Video Container - 16:9 aspect ratio */}
                     <div className={`relative w-full ${isFullscreen ? 'flex-1' : ''}`} style={!isFullscreen ? { paddingTop: '56.25%' } : {}}>
                         <div className="absolute inset-0">
