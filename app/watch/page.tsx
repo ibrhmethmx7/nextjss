@@ -745,7 +745,6 @@ function WatchContent() {
                             <div className="flex border-b border-white/5 shrink-0">
                                 <button onClick={() => setActivePanel("chat")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                                 <button onClick={() => setActivePanel("queue")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
-                                <button onClick={() => setActivePanel("users")} className={`flex-1 p-3 text-sm flex items-center justify-center gap-2 ${activePanel === "users" ? "bg-white/10 text-white" : "text-gray-400"}`}><Users className="h-4 w-4" /> Kişiler</button>
                             </div>
                             {activePanel === "chat" ? (
                                 <div className="flex-1 flex flex-col min-h-0">
@@ -776,17 +775,6 @@ function WatchContent() {
                                         <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                         <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10 shrink-0"><Send className="h-4 w-4" /></Button>
                                     </div>
-                                </div>
-                            ) : activePanel === "users" ? (
-                                <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                                    <h3 className="text-xs font-semibold text-gray-400 mb-2 px-1">ÇEVRİMİÇİ ({activeUsers.length})</h3>
-                                    {activeUsers.map(u => (
-                                        <div key={u.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                                            <div className="w-3 h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: u.color, boxShadow: `0 0 8px ${u.color}` }} />
-                                            <span className="text-sm font-medium">{u.name}</span>
-                                            {u.id === userId && <span className="text-xs text-gray-500 ml-auto">(Sen)</span>}
-                                        </div>
-                                    ))}
                                 </div>
                             ) : (
                                 <div className="flex-1 flex flex-col min-h-0">
@@ -834,7 +822,6 @@ function WatchContent() {
                         <div className="flex border-b border-white/5 shrink-0">
                             <button onClick={() => setActivePanel("chat")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "chat" ? "bg-white/10 text-white" : "text-gray-400"}`}><MessageCircle className="h-4 w-4" /> Sohbet</button>
                             <button onClick={() => setActivePanel("queue")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "queue" ? "bg-white/10 text-white" : "text-gray-400"}`}><List className="h-4 w-4" /> Kuyruk</button>
-                            <button onClick={() => setActivePanel("users")} className={`flex-1 p-2 text-sm flex items-center justify-center gap-2 ${activePanel === "users" ? "bg-white/10 text-white" : "text-gray-400"}`}><Users className="h-4 w-4" /> Kişiler</button>
                         </div>
                         {activePanel === "chat" ? (
                             <div className="flex-1 flex flex-col min-h-0">
@@ -865,17 +852,6 @@ function WatchContent() {
                                     <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
                                     <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
                                 </div>
-                            </div>
-                        ) : activePanel === "users" ? (
-                            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                                <h3 className="text-xs font-semibold text-gray-400 mb-2 px-1">ÇEVRİMİÇİ ({activeUsers.length})</h3>
-                                {activeUsers.map(u => (
-                                    <div key={u.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="w-3 h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: u.color, boxShadow: `0 0 8px ${u.color}` }} />
-                                        <span className="text-sm font-medium">{u.name}</span>
-                                        {u.id === userId && <span className="text-xs text-gray-500 ml-auto">(Sen)</span>}
-                                    </div>
-                                ))}
                             </div>
                         ) : (
                             <div className="flex-1 flex flex-col min-h-0">
