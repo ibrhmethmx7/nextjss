@@ -644,11 +644,11 @@ function WatchContent() {
     }
 
     return (
-        <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'min-h-screen bg-[#0a0a0a]'} text-white flex flex-col`}>
+        <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'h-screen overflow-hidden bg-[#0a0a0a]'} text-white flex flex-col`}>
 
             {/* Header - Hidden in Fullscreen */}
             {!isFullscreen && (
-                <div className="flex items-center justify-between p-2 border-b border-white/5 bg-black/80 shrink-0">
+                <div className="flex items-center justify-between p-2 border-b border-white/5 bg-black/80 shrink-0 h-14">
                     <div className="flex items-center gap-2">
                         <Link href="/dashboard"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /></Button></Link>
                         <Button variant="outline" size="sm" onClick={copyRoomLink} className="text-xs border-white/10 bg-white/5 hover:bg-white/10">
@@ -665,7 +665,7 @@ function WatchContent() {
             )}
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-full' : 'md:h-[calc(100vh-60px)]'}`}>
+            <div className={`flex-1 flex flex-col min-h-0 ${isFullscreen ? 'h-full' : ''}`}>
 
                 {/* Tablet/Desktop Layout - CSS Grid for perfect alignment */}
                 <div className={`${isFullscreen ? 'flex-1' : 'flex-1 md:grid md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_384px] md:items-start md:gap-0 h-full'}`}>
