@@ -13,14 +13,13 @@ import MobileSeekOverlay from "@/components/player/MobileSeekOverlay";
 import { ReactionOverlay } from "@/components/player/ReactionSystem";
 import VideoControls from "@/components/player/VideoControls";
 import { ref, update, push, set, onValue, get, onDisconnect, remove } from "firebase/database";
-import { Users, Palette } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const VideoChat = dynamic(() => import('@/components/player/VideoChat'), { ssr: false });
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
+import { Users, Palette, Mic, Square } from "lucide-react";
 
 type QueueItem = { id: string; title: string; url: string; thumbnail?: string; movieId?: string; };
 
-type ChatMessage = { user: string; text: string; time: number; color?: string; };
+type ChatMessage = { user: string; text?: string; type?: 'text' | 'audio'; url?: string; time: number; color?: string; };
 type ActiveUser = { id: string; name: string; color: string; online: boolean; };
 
 const USER_COLORS = [
@@ -110,8 +109,14 @@ function WatchContent() {
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const mobileChatContainerRef = useRef<HTMLDivElement>(null);
     const fullscreenChatRef = useRef<HTMLDivElement>(null);
+
     const playerRef = useRef<any>(null);
     const isRemoteUpdate = useRef(false);
+
+    // Voice Note State
+    const [isRecording, setIsRecording] = useState(false);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
     // Auto-scroll fullscreen chat
     useEffect(() => {
@@ -534,10 +539,58 @@ function WatchContent() {
         await set(push(ref(database, `rooms/${roomId}/messages`)), {
             user: currentUser,
             text: newMessage,
+            type: 'text',
             time: Date.now(),
             color: userColor
         });
         setNewMessage("");
+    };
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                // Upload to Firebase
+                const filename = `voice_${Date.now()}.webm`;
+                const sRef = storageRef(storage, `rooms/${roomId}/voice/${filename}`);
+                await uploadBytes(sRef, audioBlob);
+                const url = await getDownloadURL(sRef);
+
+                // Send message
+                await set(push(ref(database, `rooms/${roomId}/messages`)), {
+                    user: currentUser,
+                    type: 'audio',
+                    url: url,
+                    time: Date.now(),
+                    color: userColor
+                });
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+        } catch (err) {
+            console.error("Mic Error:", err);
+            alert("Mikrofon izni gerekli!");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
     };
 
     // Control Handlers
@@ -757,7 +810,11 @@ function WatchContent() {
                                             <div key={i} className="bg-white/5 rounded-lg p-2 flex gap-2">
                                                 <div className="flex-1 min-w-0">
                                                     <span className="text-xs font-medium" style={{ color: msg.color || "#3b82f6" }}>{msg.user}</span>
-                                                    <p className="text-sm break-words">{msg.text}</p>
+                                                    {msg.type === 'audio' ? (
+                                                        <audio controls src={msg.url} className="w-full h-8 mt-1" />
+                                                    ) : (
+                                                        <p className="text-sm break-words">{msg.text}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -776,6 +833,15 @@ function WatchContent() {
                                             )}
                                         </div>
                                         <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
+                                        <button
+                                            onMouseDown={startRecording}
+                                            onMouseUp={stopRecording}
+                                            onTouchStart={startRecording}
+                                            onTouchEnd={stopRecording}
+                                            className={`p-2 rounded-full transition-colors ${isRecording ? 'bg-red-600 animate-pulse' : 'bg-white/10 hover:bg-white/20'}`}
+                                        >
+                                            {isRecording ? <Square className="h-4 w-4 text-white" /> : <Mic className="h-4 w-4 text-white" />}
+                                        </button>
                                         <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10 shrink-0"><Send className="h-4 w-4" /></Button>
                                     </div>
                                 </div>
@@ -834,7 +900,11 @@ function WatchContent() {
                                         <div key={i} className="bg-white/5 rounded p-2 flex gap-2">
                                             <div className="flex-1 min-w-0">
                                                 <span className="text-xs font-medium" style={{ color: msg.color || "#3b82f6" }}>{msg.user}</span>
-                                                <p className="text-sm break-words">{msg.text}</p>
+                                                {msg.type === 'audio' ? (
+                                                    <audio controls src={msg.url} className="w-full h-8 mt-1" />
+                                                ) : (
+                                                    <p className="text-sm break-words">{msg.text}</p>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -853,6 +923,15 @@ function WatchContent() {
                                         )}
                                     </div>
                                     <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
+                                    <button
+                                        onMouseDown={startRecording}
+                                        onMouseUp={stopRecording}
+                                        onTouchStart={startRecording}
+                                        onTouchEnd={stopRecording}
+                                        className={`p-2 rounded-full transition-colors ${isRecording ? 'bg-red-600 animate-pulse' : 'bg-white/10 hover:bg-white/20'}`}
+                                    >
+                                        {isRecording ? <Square className="h-4 w-4 text-white" /> : <Mic className="h-4 w-4 text-white" />}
+                                    </button>
                                     <Button size="sm" onClick={sendMessage} className="bg-red-600 h-10"><Send className="h-4 w-4" /></Button>
                                 </div>
                             </div>
@@ -881,8 +960,6 @@ function WatchContent() {
                         )}
                     </div>
                 )}
-                {/* Video Chat Overlay */}
-                {roomId && userId && <VideoChat roomId={roomId} userId={userId} userName={currentUser} />}
             </div>
         </div>
     );

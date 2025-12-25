@@ -16,6 +16,9 @@ const firebaseConfig = {
 // YouTube API Key
 export const YOUTUBE_API_KEY = "AIzaSyDKlF_i_-8mGkExJPN4p6wdOwMR41xCTxs";
 
+import { getStorage } from "firebase/storage";
+
 const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
+export const storage = getStorage(app);
 export default app;
