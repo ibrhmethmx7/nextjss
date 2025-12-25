@@ -98,8 +98,7 @@ export default function MovieDetailPage() {
             <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 to-transparent">
                 <div className="px-4 md:px-12 py-4 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-2">
-                        <span className="material-icons-round text-red-600 text-3xl">movie</span>
-                        <span className="text-red-600 font-bold text-xl">SELOFLIX</span>
+                        <img src="/img/logo.png" alt="SELOFLIX" className="h-10 object-contain" />
                     </Link>
                     <div className="flex items-center gap-3">
                         <Link href="/add-movie" className="p-2 hover:bg-white/10 rounded-full transition-colors">

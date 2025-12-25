@@ -89,8 +89,7 @@ export default function DashboardPage() {
                 <div className="px-4 md:px-12 py-4 flex items-center justify-between">
                     {/* Logo */}
                     <Link href="/dashboard" className="flex items-center gap-2">
-                        <span className="material-icons-round text-red-600 text-3xl">movie</span>
-                        <span className="text-red-600 font-bold text-xl">SELOFLIX</span>
+                        <img src="/img/logo.png" alt="SELOFLIX" className="h-10 object-contain" />
                     </Link>
 
                     {/* Right Side */}
