@@ -32,7 +32,7 @@ const COLORS = {
 
 // Quick text reactions
 const QUICK_TEXTS: { text: string; icon: string; bg: string }[] = [
-    // Text reactions moved to sound clips
+    { text: "uiiyyyy", icon: "🐺", bg: "bg-pink-500" },
 ];
 
 // Music clips - local audio files
@@ -65,13 +65,6 @@ const MUSIC_CLIPS = [
         icon: "🤷‍♂️",
         audioSrc: "/sounds/hayde.mp3",
         bg: "bg-gradient-to-r from-green-500 to-emerald-600"
-    },
-    {
-        id: "uiy",
-        label: "Uiy",
-        icon: "🐺",
-        audioSrc: "/sounds/uiy.mp3",
-        bg: "bg-gradient-to-r from-pink-500 to-rose-500"
     }
 ];
 
