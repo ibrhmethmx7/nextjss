@@ -31,10 +31,8 @@ const COLORS = {
 };
 
 // Quick text reactions
-const QUICK_TEXTS = [
-    { text: "vah vah", icon: "😱", bg: "bg-orange-500" },
-    { text: "haydeeee", icon: "🤷‍♂️", bg: "bg-green-500" },
-    { text: "uiiyyyy", icon: "🐺", bg: "bg-pink-500" },
+const QUICK_TEXTS: { text: string; icon: string; bg: string }[] = [
+    // Text reactions moved to sound clips
 ];
 
 // Music clips - local audio files
@@ -55,32 +53,25 @@ const MUSIC_CLIPS = [
         bg: "bg-gradient-to-r from-amber-500 to-red-500"
     },
     {
-        id: "alkis",
-        label: "Alkış",
-        icon: "👏",
-        audioSrc: "/sounds/alkis.mp3",
-        bg: "bg-gradient-to-r from-blue-500 to-cyan-500"
+        id: "vahvah",
+        label: "Vah Vah",
+        icon: "😱",
+        audioSrc: "/sounds/vahvah.mp3",
+        bg: "bg-gradient-to-r from-orange-500 to-red-500"
     },
     {
-        id: "gulme",
-        label: "Gülme",
-        icon: "😂",
-        audioSrc: "/sounds/gulme.mp3",
-        bg: "bg-gradient-to-r from-yellow-400 to-orange-500"
+        id: "hayde",
+        label: "Hayde",
+        icon: "🤷‍♂️",
+        audioSrc: "/sounds/hayde.mp3",
+        bg: "bg-gradient-to-r from-green-500 to-emerald-600"
     },
     {
-        id: "wow",
-        label: "Wow",
-        icon: "😮",
-        audioSrc: "/sounds/wow.mp3",
-        bg: "bg-gradient-to-r from-purple-500 to-indigo-500"
-    },
-    {
-        id: "yanlis",
-        label: "Hata",
-        icon: "❌",
-        audioSrc: "/sounds/yanlis.mp3",
-        bg: "bg-gradient-to-r from-red-500 to-pink-600"
+        id: "uiy",
+        label: "Uiy",
+        icon: "🐺",
+        audioSrc: "/sounds/uiy.mp3",
+        bg: "bg-gradient-to-r from-pink-500 to-rose-500"
     }
 ];
 
