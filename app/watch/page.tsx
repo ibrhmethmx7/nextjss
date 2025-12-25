@@ -44,6 +44,18 @@ function getThumbnail(url: string): string {
     return "";
 }
 
+// Random Avatars
+const AVATARS = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🦣', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🦬', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊', '🐇', '🦝', '🦨', '🦡', '🦦', '🦥', '🐁', '🐀', '🐿', '🦔', '🐾', '🐉', '🐲'];
+
+function getAvatar(username: string): string {
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+        hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % AVATARS.length;
+    return AVATARS[index];
+}
+
 function WatchContent() {
     const searchParams = useSearchParams();
     const initialUrl = searchParams.get("url") || "";
@@ -700,9 +712,12 @@ function WatchContent() {
                                     <div className="max-w-md ml-auto pointer-events-auto">
                                         <div ref={fullscreenChatRef} className="max-h-32 overflow-y-auto space-y-1 mb-2 scroll-smooth">
                                             {chatMessages.slice(-5).map((msg, i) => (
-                                                <div key={i} className="bg-black/60 backdrop-blur rounded px-2 py-1 text-sm">
-                                                    <span className={`font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}: </span>
-                                                    <span>{msg.text}</span>
+                                                <div key={i} className="bg-black/60 backdrop-blur rounded px-2 py-1 text-sm flex items-center gap-2">
+                                                    <span className="text-lg">{getAvatar(msg.user)}</span>
+                                                    <div>
+                                                        <span className={`font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}: </span>
+                                                        <span>{msg.text}</span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -727,7 +742,15 @@ function WatchContent() {
                                 <div className="flex-1 flex flex-col min-h-0">
                                     <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2 scroll-smooth">
                                         {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-8">Henüz mesaj yok</p>}
-                                        {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded-lg p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
+                                        {chatMessages.map((msg, i) => (
+                                            <div key={i} className="bg-white/5 rounded-lg p-2 flex gap-2">
+                                                <div className="text-2xl pt-1 select-none">{getAvatar(msg.user)}</div>
+                                                <div className="flex-1 min-w-0">
+                                                    <span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span>
+                                                    <p className="text-sm break-words">{msg.text}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                     <div className="p-3 flex gap-2 border-t border-white/5 shrink-0">
                                         <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj yaz..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
@@ -785,7 +808,15 @@ function WatchContent() {
                             <div className="flex-1 flex flex-col min-h-0">
                                 <div ref={mobileChatContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 scroll-smooth">
                                     {chatMessages.length === 0 && <p className="text-gray-500 text-sm text-center py-4">Henüz mesaj yok</p>}
-                                    {chatMessages.map((msg, i) => <div key={i} className="bg-white/5 rounded p-2"><span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span><p className="text-sm">{msg.text}</p></div>)}
+                                    {chatMessages.map((msg, i) => (
+                                        <div key={i} className="bg-white/5 rounded p-2 flex gap-2">
+                                            <div className="text-xl pt-0.5 select-none">{getAvatar(msg.user)}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <span className={`text-xs font-medium ${msg.user === "Ben" ? "text-blue-400" : "text-pink-400"}`}>{msg.user}</span>
+                                                <p className="text-sm break-words">{msg.text}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                                 <div className="p-2 flex gap-2 border-t border-white/5 shrink-0">
                                     <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && sendMessage()} placeholder="Mesaj..." className="bg-white/5 border-white/10 h-10" style={{ fontSize: '16px' }} />
